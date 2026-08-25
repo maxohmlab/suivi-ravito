@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ravito — Suivi nutrition sorties longues</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151b;
+    --surface:#1b1f27;
+    --surface-2:#232838;
+    --surface-3:#2a3042;
+    --border:#2e3444;
+    --text:#f3f2ed;
+    --text-dim:#9099ac;
+    --text-dimmer:#616a7d;
+    --cho:#ff8a3d;
+    --na:#3fc7c1;
+    --caf:#c792ea;
+    --good:#4ade80;
+    --warn:#fbbf24;
+    --bad:#f87171;
+    --radius:14px;
+    --radius-sm:9px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%, #1a2130 0%, var(--bg) 55%);
+    color:var(--text);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:20px 14px 60px;
+    min-height:100vh;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace;}
+  .display{font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:0.02em;}
+
+  /* ---------- HEADER / BIB ---------- */
+  .bib{
+    position:relative;
+    background:linear-gradient(180deg,#f3f2ed,#e7e5dc);
+    color:#14171d;
+    border-radius:10px;
+    padding:16px 20px 14px;
+    transform:rotate(-0.6deg);
+    box-shadow:0 14px 30px -12px rgba(0,0,0,0.55);
+    margin-bottom:22px;
+    border:1px solid #d8d5c9;
+  }
+  .bib::before,.bib::after{
+    content:'';position:absolute;top:9px;width:9px;height:9px;border-radius:50%;
+    background:#9a9689; box-shadow:inset 0 1px 2px rgba(0,0,0,0.4);
+  }
+  .bib::before{left:10px;} .bib::after{right:10px;}
+  .bib .eyebrow{
+    font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#6b6555;font-weight:600;
+    display:flex;justify-content:space-between;align-items:center;gap:8px;
+  }
+  .bib .title{
+    font-family:'Bebas Neue',Impact,sans-serif;
+    font-size:clamp(26px,7.5vw,38px);
+    line-height:0.95;
+    margin:2px 0 4px;
+    word-break:break-word;
+  }
+  .bib .sub{font-size:12.5px;color:#4c4739;font-weight:500;}
+  .bib .sub b{color:#14171d;}
+  .bib-edit-btn{background:none;border:none;color:#6b6555;font-size:11px;font-weight:700;cursor:pointer;
+    text-decoration:underline;padding:0;text-transform:uppercase;letter-spacing:0.06em;}
+  .bib-edit-form{display:flex;flex-direction:column;gap:8px;margin-top:6px;}
+  .bib-edit-form input{background:#fff;border:1px solid #cfcabb;color:#14171d;border-radius:7px;
+    padding:8px 9px;font-size:13px;font-family:'Inter';}
+  .bib-edit-actions{display:flex;gap:8px;}
+  .bib-edit-actions button{border:none;border-radius:7px;padding:7px 12px;font-size:12.5px;font-weight:700;cursor:pointer;}
+  .bib-save{background:#14171d;color:#f3f2ed;}
+  .bib-cancel{background:transparent;color:#4c4739;text-decoration:underline;}
+
+  .next-banner{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:12px 14px;margin-bottom:18px;font-size:13.5px;color:var(--text-dim);
+    display:flex;gap:10px;align-items:flex-start;
+  }
+  .next-banner .dot{width:8px;height:8px;border-radius:50%;background:var(--cho);margin-top:5px;flex:0 0 auto;
+    box-shadow:0 0 0 4px rgba(255,138,61,0.15);}
+  .next-banner b{color:var(--text);}
+
+  /* ---------- TABS ---------- */
+  .tabs{display:flex;gap:4px;margin-bottom:18px;background:var(--surface);padding:4px;border-radius:12px;border:1px solid var(--border);}
+  .tab-btn{flex:1;background:transparent;border:none;color:var(--text-dim);font-family:'Inter';font-weight:600;
+    font-size:11px;padding:9px 2px;border-radius:9px;cursor:pointer;transition:background .15s,color .15s;}
+  .tab-btn.active{background:var(--surface-3);color:var(--text);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  /* ---------- CARDS ---------- */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+  .card h2{
+    font-family:'Bebas Neue',Impact,sans-serif;font-size:18px;letter-spacing:0.03em;
+    margin:0 0 12px;color:var(--text);display:flex;align-items:center;gap:8px;
+  }
+  .card h2 .n{color:var(--text-dimmer);font-size:14px;}
+  .card p{font-size:13px;color:var(--text-dim);line-height:1.55;margin:0 0 10px;}
+  .field-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .field{flex:1;min-width:120px;}
+  .field label{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-dim);margin-bottom:5px;font-weight:600;}
+  input[type=date],input[type=number],input[type=text]{
+    width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    border-radius:var(--radius-sm);padding:9px 10px;font-size:14px;font-family:'Inter';
+  }
+  input:focus{outline:2px solid var(--cho);outline-offset:1px;}
+  .seg{display:flex;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+  .seg button{flex:1;background:transparent;border:none;color:var(--text-dim);font-weight:600;font-size:13px;padding:9px;cursor:pointer;}
+  .seg button.active{background:var(--cho);color:#1a1206;}
+  .hint{font-size:12px;color:var(--text-dimmer);margin-top:4px;}
+  .hint button.link{background:none;border:none;color:var(--cho);font-weight:600;cursor:pointer;padding:0;font-size:12px;text-decoration:underline;}
+
+  /* ---------- SUMMARY / GAUGE ---------- */
+  .summary{display:flex;gap:18px;align-items:center;flex-wrap:wrap;}
+  .gauge{position:relative;width:132px;height:132px;border-radius:50%;flex:0 0 auto;
+    background:conic-gradient(var(--ring,var(--text-dimmer)) calc(var(--pct,0)*1%), var(--surface-2) 0);
+    display:grid;place-items:center;transition:background .3s ease;}
+  .gauge::before{content:'';position:absolute;inset:12px;border-radius:50%;background:var(--surface);}
+  .gauge .gval{position:relative;z-index:1;text-align:center;}
+  .gauge .gval .num{font-family:'Bebas Neue';font-size:30px;line-height:1;}
+  .gauge .gval .unit{font-size:10px;color:var(--text-dim);letter-spacing:0.05em;text-transform:uppercase;}
+  .gauge-label{font-size:12.5px;color:var(--text-dim);text-align:center;margin-top:6px;}
+  .stats{flex:1;min-width:150px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .stat{background:var(--surface-2);border-radius:var(--radius-sm);padding:9px 10px;}
+  .stat .k{font-size:10.5px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-dim);font-weight:600;}
+  .stat .v{font-family:'Bebas Neue';font-size:21px;margin-top:1px;}
+  .stat.cho .v{color:var(--cho);} .stat.na .v{color:var(--na);} .stat.caf .v{color:var(--caf);}
+
+  /* ---------- SOLVER ---------- */
+  .solver{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;}
+  .solver select{width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    border-radius:var(--radius-sm);padding:9px 10px;font-size:13.5px;}
+  .btn{background:var(--cho);color:#1a1206;border:none;border-radius:var(--radius-sm);padding:10px 14px;
+    font-weight:700;font-size:13.5px;cursor:pointer;white-space:nowrap;}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text-dim);}
+  .btn.small{padding:7px 10px;font-size:12.5px;}
+  .btn:active{transform:scale(0.98);}
+
+  /* ---------- PRODUCT TABLE ---------- */
+  .cat-title{font-size:11.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dimmer);
+    font-weight:700;margin:14px 0 6px;}
+  .cat-title:first-child{margin-top:0;}
+  .prod-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+  .prod-row:last-child{border-bottom:none;}
+  .prod-info{flex:1;min-width:0;}
+  .prod-name{font-size:13.5px;font-weight:600;}
+  .prod-meta{font-size:11.5px;color:var(--text-dim);margin-top:1px;}
+  .prod-meta .m-cho{color:var(--cho);} .prod-meta .m-na{color:var(--na);} .prod-meta .m-caf{color:var(--caf);}
+  .prod-note{font-size:11px;color:var(--warn);margin-top:3px;line-height:1.4;}
+  .qty-group{display:flex;align-items:center;gap:0;flex:0 0 auto;margin-top:1px;}
+  .qty-group button{width:28px;height:28px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    font-size:15px;cursor:pointer;line-height:1;}
+  .qty-group button:first-child{border-radius:7px 0 0 7px;}
+  .qty-group button:last-child{border-radius:0 7px 7px 0;}
+  .qty-group input{width:44px;height:28px;text-align:center;border-radius:0;border-left:none;border-right:none;
+    padding:0;font-size:13.5px;-moz-appearance:textfield;}
+  .qty-group input::-webkit-outer-spin-button,.qty-group input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .del-x{background:none;border:none;color:var(--text-dimmer);cursor:pointer;font-size:15px;padding:0 2px;margin-top:1px;}
+  .edit-pencil{background:none;border:none;color:var(--text-dimmer);cursor:pointer;font-size:14px;padding:0 4px;flex:0 0 auto;margin-top:1px;}
+  .edit-pencil:hover{color:var(--cho);}
+  .prod-row.editing{flex-direction:column;align-items:stretch;background:var(--surface-2);border-radius:var(--radius-sm);
+    padding:11px;margin:4px 0;border-bottom:none;}
+  .edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .edit-grid .ef{display:flex;flex-direction:column;gap:3px;}
+  .edit-grid .ef.ef-full{grid-column:1 / -1;}
+  .edit-grid .ef label{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dimmer);font-weight:600;}
+  .edit-grid .ef input{background:var(--surface-3);border:1px solid var(--border);color:var(--text);
+    border-radius:7px;padding:7px 8px;font-size:13px;width:100%;}
+  .edit-grid .ef select{background:var(--surface-3);border:1px solid var(--border);color:var(--text);
+    border-radius:7px;padding:7px 8px;font-size:13px;width:100%;}
+  .edit-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+
+  details.custom-add{margin-top:10px;}
+  details.custom-add summary{cursor:pointer;font-size:12.5px;color:var(--text-dim);font-weight:600;padding:6px 0;}
+  .add-form{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .add-form input{flex:1;min-width:70px;}
+  .add-form input.name{flex:2 1 140px;}
+  .add-form input.note{flex:1 1 100%;}
+  .add-form select{flex:1;min-width:110px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    border-radius:var(--radius-sm);padding:9px 8px;font-size:13px;font-family:'Inter';}
+
+  .actions{display:flex;gap:10px;margin-top:4px;}
+  .actions .btn{flex:1;}
+
+  textarea{width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    border-radius:var(--radius-sm);padding:9px 10px;font-size:13.5px;font-family:'Inter';resize:vertical;min-height:52px;}
+
+  /* ---------- SESSION LISTS (planifiées / historique) ---------- */
+  .hist-row{border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:9px;background:var(--surface-2);}
+  .hist-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .hist-date{font-size:12.5px;color:var(--text-dim);font-weight:600;}
+  .week-chip{display:inline-block;background:var(--surface-3);color:var(--cho);font-family:'JetBrains Mono';
+    font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:5px;margin-right:6px;}
+  .hist-label{font-size:13.5px;font-weight:600;margin-top:1px;}
+  .hist-tag{font-size:10px;text-transform:uppercase;letter-spacing:0.04em;padding:2px 7px;border-radius:20px;
+    font-weight:700;flex:0 0 auto;}
+  .hist-tag.plan{background:rgba(63,199,193,0.15);color:var(--na);}
+  .hist-tag.realise{background:rgba(255,138,61,0.15);color:var(--cho);}
+  .hist-bar-track{background:var(--surface-3);border-radius:6px;height:8px;margin-top:9px;overflow:hidden;}
+  .hist-bar-fill{height:100%;border-radius:6px;transition:width .3s;}
+  .hist-figs{display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-dim);margin-top:5px;}
+  .hist-figs b{color:var(--text);font-family:'JetBrains Mono';}
+  .hist-items{font-size:11.5px;color:var(--text-dimmer);margin-top:7px;}
+  .hist-copy-row{margin-top:10px;}
+  .hist-copy-row .btn{width:100%;transition:background .15s,color .15s,border-color .15s;}
+  .hist-linked{font-size:11px;color:var(--good);margin-top:4px;font-weight:600;}
+  .cmp-block{background:var(--surface-3);border-radius:var(--radius-sm);padding:9px 10px;margin-top:9px;}
+  .cmp-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dimmer);font-weight:700;margin-bottom:6px;}
+  .cmp-row{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--text-dim);padding:2px 0;}
+  .cmp-row .cmp-name{flex:1;}
+  .cmp-row .cmp-vals{font-family:'JetBrains Mono';color:var(--text);flex:0 0 auto;text-align:right;white-space:nowrap;}
+  .cmp-total{border-top:1px solid var(--border);margin-top:4px;padding-top:5px;font-weight:700;}
+  .hist-row-actions{display:flex;justify-content:flex-end;gap:14px;margin-bottom:2px;}
+  .hist-action{background:none;border:none;color:var(--text-dimmer);cursor:pointer;font-size:11.5px;font-weight:600;
+    text-transform:uppercase;letter-spacing:0.03em;padding:0;}
+  .hist-action:hover{color:var(--cho);}
+  .hist-action.hist-del:hover{color:var(--bad);}
+
+  .aide-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .aide-table th,.aide-table td{padding:7px 6px;text-align:left;border-bottom:1px solid var(--border);}
+  .aide-table th{color:var(--text-dimmer);font-weight:600;text-transform:uppercase;font-size:10.5px;letter-spacing:0.04em;}
+  .aide-table td.tgt{font-family:'JetBrains Mono';color:var(--cho);font-weight:700;}
+  .help-steps{margin:0;padding-left:20px;font-size:13px;color:var(--text-dim);line-height:1.7;}
+  .help-steps li{margin-bottom:4px;}
+  .help-steps b{color:var(--text);}
+
+  .empty{color:var(--text-dimmer);font-size:13px;text-align:center;padding:20px 0;}
+
+  #chartContainer svg{width:100%;height:auto;display:block;}
+
+  .timing-row{display:flex;align-items:center;gap:11px;padding:7px 0;border-bottom:1px solid var(--border);}
+  .timing-row:last-child{border-bottom:none;}
+  .timing-time{font-family:'JetBrains Mono';font-size:12px;font-weight:700;color:var(--cho);background:var(--surface-2);
+    border-radius:6px;padding:3px 8px;flex:0 0 auto;min-width:52px;text-align:center;}
+  .timing-name{font-size:13px;color:var(--text);}
+  .timing-name .u{color:var(--text-dim);font-size:11.5px;}
+  .timing-hydro{background:var(--surface-2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px;}
+  .timing-hydro-title{font-size:13px;font-weight:700;color:var(--na);margin-bottom:4px;}
+  .timing-hydro-body{font-size:12.5px;color:var(--text-dim);line-height:1.6;}
+  .timing-hydro-body b{color:var(--text);}
+
+  .vigil{font-size:12.5px;color:var(--text-dim);line-height:1.5;padding-left:18px;margin:0;}
+  .vigil li{margin-bottom:6px;}
+
+  ::selection{background:var(--cho);color:#1a1206;}
+
+  .footer{text-align:center;margin-top:32px;padding-top:18px;border-top:1px solid var(--border);
+    color:var(--text-dimmer);font-size:11.5px;line-height:1.8;}
+  .footer-name{font-weight:700;color:var(--text-dim);font-size:12.5px;letter-spacing:0.02em;}
+  .footer-link{color:var(--cho);text-decoration:none;}
+  .footer-link:hover{text-decoration:underline;}
+  .footer-meta{margin-top:1px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="bib" id="bib">
+    <div class="eyebrow"><span>Suivi nutrition &amp; hydratation</span><button class="bib-edit-btn" id="bibEditBtn" type="button">✎ Modifier</button></div>
+    <div id="bibDisplay">
+      <div class="title" id="bibTitle">SUIVI RAVITO</div>
+      <div class="sub" id="bibSub">Ajoute le nom et la date de ta course pour personnaliser cette page.</div>
+    </div>
+    <div class="bib-edit-form" id="bibEditForm" style="display:none;">
+      <input type="text" id="bibNameInput" placeholder="Nom de la course (ex: Marathon de Bruges)">
+      <input type="date" id="bibDateInput">
+      <div class="bib-edit-actions">
+        <button type="button" class="bib-save" id="bibSaveBtn">Enregistrer</button>
+        <button type="button" class="bib-cancel" id="bibCancelBtn">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="next-banner" id="nextBanner"></div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="seance">Séance</button>
+    <button class="tab-btn" data-tab="planifiees">Planifiées</button>
+    <button class="tab-btn" data-tab="historique">Historique</button>
+    <button class="tab-btn" data-tab="graphique">Graphique</button>
+    <button class="tab-btn" data-tab="aide">Aide</button>
+  </div>
+
+  <!-- ===================== TAB SEANCE ===================== -->
+  <div class="tab-panel active" id="tab-seance">
+
+    <div class="card">
+      <h2>Paramètres <span class="n">01</span></h2>
+      <div class="field-row">
+        <div class="field" style="flex:0 0 auto;min-width:180px;">
+          <label>Type de séance</label>
+          <div class="seg">
+            <button type="button" class="seg-btn active" data-type="plan">Prévision</button>
+            <button type="button" class="seg-btn" data-type="realise">Réalisé</button>
+          </div>
+        </div>
+        <div class="field" style="flex:0 0 90px;">
+          <label>Semaine</label>
+          <input type="text" id="sessWeek" placeholder="ex: S5">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="sessDate">
+        </div>
+        <div class="field">
+          <label>Durée — heures</label>
+          <input type="number" id="durH" min="0" max="12" value="2">
+        </div>
+        <div class="field">
+          <label>Durée — minutes</label>
+          <input type="number" id="durM" min="0" max="59" step="5" value="20">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Cible CHO (g/h)</label>
+          <input type="number" id="targetInput" min="0" step="1" placeholder="—">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Résultats <span class="n">02</span></h2>
+      <div class="summary">
+        <div>
+          <div class="gauge" id="gauge"><div class="gval"><div class="num" id="gaugeVal">0</div><div class="unit">g CHO/h</div></div></div>
+          <div class="gauge-label" id="gaugeLabel">—</div>
+        </div>
+        <div class="stats">
+          <div class="stat cho"><div class="k">CHO total</div><div class="v" id="totCho">0 g</div></div>
+          <div class="stat na"><div class="k">Sodium total</div><div class="v" id="totNa">0 mg</div></div>
+          <div class="stat na"><div class="k">Sodium / h</div><div class="v" id="rateNa">0 mg</div></div>
+          <div class="stat caf"><div class="k">Caféine</div><div class="v" id="totCaf">0 mg</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Calculateur rapide <span class="n">03</span></h2>
+      <div class="hint" style="margin-bottom:8px;">Choisis un produit principal : je calcule combien il en faut pour atteindre la cible sur la durée saisie.</div>
+      <div class="solver">
+        <div style="flex:1;min-width:160px;">
+          <select id="solverProduct"></select>
+        </div>
+        <button class="btn ghost small" id="solverBtn">Suggérer la quantité</button>
+      </div>
+      <div class="hint" id="solverResult"></div>
+    </div>
+
+    <div class="card">
+      <h2>Produits de la séance <span class="n">04</span></h2>
+      <div id="productList"></div>
+
+      <details class="custom-add">
+        <summary>+ Ajouter un produit personnalisé</summary>
+        <div class="add-form">
+          <input type="text" class="name" id="cpName" placeholder="Nom du produit">
+          <select id="cpCat"></select>
+          <input type="text" id="cpUnit" placeholder="Unité (ex: gel)" value="unité">
+          <input type="number" id="cpCho" placeholder="CHO g">
+          <input type="number" id="cpNa" placeholder="Na mg">
+          <input type="number" id="cpCaf" placeholder="Caf mg">
+          <input type="text" class="note" id="cpNote" placeholder="Remarque (optionnel)">
+        </div>
+        <button class="btn ghost small" style="margin-top:8px;" id="addCustomBtn">Ajouter à la bibliothèque</button>
+      </details>
+      <div class="hint" style="margin-top:10px;">
+        <button class="link" id="restoreDefaultsBtn" type="button">Restaurer les produits par défaut manquants</button>
+      </div>
+      <div class="actions" style="margin-top:10px;">
+        <button class="btn ghost small" id="exportProductsBtn">⬇ Exporter mes produits</button>
+        <button class="btn ghost small" id="importProductsBtn">⬆ Importer des produits</button>
+      </div>
+      <input type="file" id="importProductsFile" accept=".json,application/json" style="display:none;">
+    </div>
+
+    <div class="card">
+      <h2>Plan de prise <span class="n">05</span></h2>
+      <div class="hint" style="margin-bottom:8px;">La boisson est à prendre en continu dès le départ ; les électrolytes suivent une cadence horaire fixe, indépendante des glucides ; les gels/gommes sont espacés entre eux pour la digestion.</div>
+      <div id="timingPlan"></div>
+    </div>
+
+    <div class="card">
+      <h2>Note <span class="n">06</span></h2>
+      <div class="hint" id="editingBanner" style="display:none;margin-bottom:8px;"></div>
+      <textarea id="sessNotes" placeholder="Sensations, digestion, météo, ravitos ratés, remarques..."></textarea>
+      <div class="actions" style="margin-top:12px;">
+        <button class="btn" id="saveBtn">Enregistrer</button>
+        <button class="btn ghost" id="resetBtn">Réinitialiser</button>
+      </div>
+      <button class="btn ghost" id="cancelEditBtn" style="display:none;width:100%;margin-top:8px;">Annuler la modification</button>
+    </div>
+  </div>
+
+  <!-- ===================== TAB PLANIFIEES ===================== -->
+  <div class="tab-panel" id="tab-planifiees">
+    <div class="card">
+      <h2>Séances planifiées</h2>
+      <p>Tes prévisions à venir. Le jour J, ouvre la séance en "Modifier", ajuste les quantités réellement prises, bascule le type sur "Réalisé" puis enregistre — elle passera dans l'Historique.</p>
+      <div id="planList"></div>
+    </div>
+  </div>
+
+  <!-- ===================== TAB HISTORIQUE ===================== -->
+  <div class="tab-panel" id="tab-historique">
+    <div class="card">
+      <h2>Séances réalisées</h2>
+      <div id="histList"></div>
+    </div>
+  </div>
+
+  <!-- ===================== TAB GRAPHIQUE ===================== -->
+  <div class="tab-panel" id="tab-graphique">
+    <div class="card">
+      <h2>Progression CHO/h</h2>
+      <div class="hint" id="chartStats" style="margin-bottom:10px;"></div>
+      <div id="chartContainer"></div>
+      <div class="actions" style="margin-top:14px;">
+        <button class="btn ghost" id="exportChartBtn" style="display:none;">⬇ Exporter en PNG</button>
+      </div>
+      <div class="hint" style="margin-top:10px;">Ligne pointillée = cible · point plein = séance réalisée · point creux = prévision. Couleur du point : même code que la jauge de l'onglet Séance (vert = dans la cible, orange = écart modéré, rouge = hors cible).</div>
+    </div>
+  </div>
+
+  <!-- ===================== TAB AIDE ===================== -->
+  <div class="tab-panel" id="tab-aide">
+
+    <div class="card">
+      <h2>Comment utiliser cet outil</h2>
+      <ol class="help-steps">
+        <li><b>Planifie</b> une séance dans l'onglet Séance (type "Prévision") : semaine, date, durée, cible CHO/h, produits envisagés. Enregistre — elle apparaît dans "Planifiées".</li>
+        <li><b>Le jour J</b>, rouvre-la via "Modifier" dans l'onglet Planifiées, ajuste les quantités réellement prises, passe le type sur "Réalisé", enregistre — elle bascule dans "Historique".</li>
+        <li><b>Le calculateur rapide</b> te dit combien d'un produit il faut pour couvrir ta cible sur la durée prévue, et à quel rythme le prendre.</li>
+        <li><b>Édite librement</b> les produits de la bibliothèque (✎) si tu changes de marque ou si une valeur d'étiquette diffère — tout est modifiable, y compris les produits par défaut.</li>
+        <li><b>Exporte régulièrement</b> tes données en JSON (ci-dessous) : le stockage intégré à cette page peut ne pas survivre à la fermeture du navigateur selon comment tu l'ouvres.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>Exemple — progression "gut training" 12 semaines</h2>
+      <p>Un exemple réel de plan de progression CHO/h utilisé pour un marathon (ici Bruges, oct. 2026), donné à titre d'inspiration — libre à toi d'adapter les semaines, dates et cibles à ta propre course dans l'onglet Séance.</p>
+      <table class="aide-table">
+        <thead><tr><th>Sem.</th><th>Séance</th><th>Cible CHO/h</th></tr></thead>
+        <tbody>
+          <tr><td>S1</td><td>Sortie longue</td><td class="tgt">40 g/h</td></tr>
+          <tr><td>S2</td><td>Sortie longue</td><td class="tgt">40 g/h</td></tr>
+          <tr><td>S3</td><td>Sortie longue</td><td class="tgt">45 g/h</td></tr>
+          <tr><td>S4</td><td>Assimilation</td><td class="tgt">—</td></tr>
+          <tr><td>S5</td><td>Sortie longue</td><td class="tgt">50 g/h</td></tr>
+          <tr><td>S6</td><td>Sortie longue</td><td class="tgt">55 g/h</td></tr>
+          <tr><td>S7</td><td>Semi-marathon (en guise de SL)</td><td class="tgt">60 g/h</td></tr>
+          <tr><td>S8</td><td>Assimilation</td><td class="tgt">—</td></tr>
+          <tr><td>S9</td><td>Sortie longue</td><td class="tgt">65 g/h</td></tr>
+          <tr><td>S10</td><td>Sortie longue la plus longue du plan</td><td class="tgt">70 g/h</td></tr>
+          <tr><td>S11</td><td>Affûtage</td><td class="tgt">75 g/h</td></tr>
+          <tr><td>S12</td><td>Course — jour J</td><td class="tgt">75 g/h plan / ≥70 g/h réel</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px;">Principes qui sous-tendent cette progression :</p>
+      <ul class="vigil">
+        <li>Le débit CHO/h augmente semaine après semaine, mais l'objectif final est un <b>ratio d'exécution réel/plan ≥95%</b> le jour J — pas seulement un chiffre ambitieux sur le papier.</li>
+        <li>Chaque sortie longue inclut un ou plusieurs blocs à allure marathon, avec une prise de gel juste avant, pour tester la digestion en conditions d'effort réelles (pas seulement à allure d'endurance tranquille).</li>
+        <li>On évite de tester deux variables nouvelles à la fois (ex : nouveau format de gel + caféine simultanément), pour isoler ce qui est bien ou mal toléré.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Points de vigilance produits</h2>
+      <ul class="vigil">
+        <li>Les remarques spécifiques à chaque produit (sodium non confirmé, dosage conseillé, risque de confusion entre gammes...) sont affichées directement sous sa fiche dans l'onglet Séance — clique sur ✎ pour les consulter ou les modifier.</li>
+        <li>Si une fiche produit officielle change, corrige la valeur directement dans la bibliothèque : elle sera utilisée pour tous les calculs futurs, sans affecter les séances déjà enregistrées (qui gardent leurs propres valeurs au moment de l'enregistrement).</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Sauvegarde &amp; export</h2>
+      <p>Le stockage automatique de cette page dépend de l'endroit où tu l'ouvres et peut ne pas persister d'une session à l'autre. Exporte régulièrement un fichier JSON de secours, et importe-le pour tout récupérer (sur cet appareil ou un autre).</p>
+      <div class="actions">
+        <button class="btn ghost" id="exportBtn">⬇ Exporter (JSON)</button>
+        <button class="btn ghost" id="importBtn">⬆ Importer</button>
+      </div>
+      <input type="file" id="importFile" accept=".json,application/json" style="display:none;">
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-name">Run Un Max</div>
+    <a class="footer-link" href="https://substack.com/@maxohm" target="_blank" rel="noopener noreferrer">substack.com/@maxohm</a>
+    <div class="footer-meta">© 2026 · Créé à l'aide de Claude AI</div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+  // ---------------- HELPERS ----------------
+  function esc(s){
+    return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function fmt(n, d){
+    d = d===undefined?1:d;
+    if(!isFinite(n)) n = 0;
+    const r = Math.round(n*Math.pow(10,d))/Math.pow(10,d);
+    return r.toString().replace('.',',');
+  }
+
+  // ---------------- DATA ----------------
+  const DEFAULTS = [
+    {id:'std-iso', name:'ISO+ Decathlon (neutre)', unit:'dose (500 ml)', cho:33, na:285, caf:0, cat:'Hydratation', note:''},
+    {id:'std-iso-menthe', name:'ISO+ Decathlon (menthe)', unit:'dose (500 ml)', cho:33, na:372, caf:0, cat:'Hydratation', note:'Contient des BCAA (1g, ratio 2:1:1 leucine/valine/isoleucine), absents de la version neutre — sodium plus élevé aussi.'},
+    {id:'std-salt', name:'Pastille de sel Decathlon', unit:'gélule', cho:0, na:118, caf:0, cat:'Électrolytes', note:'Dose complète (2 gélules) : 236mg Na, 496,5mg chlorures, 300mg potassium, 56,3mg magnésium. Usage indiqué : 1 gélule/2h avec une gorgée d\'eau.'},
+    {id:'std-ta', name:'TA Energy gel (normal)', unit:'gel (40 ml)', cho:33, na:50, caf:0, cat:'Gels', note:''},
+    {id:'std-ta-sale', name:'TA Energy gel (salé)', unit:'gel (40 ml)', cho:33, na:100, caf:0, cat:'Gels', note:'Saveurs Salted Caramel, Salted Peanut Butter, Salted Raspberry, Salted Watermelon — sodium doublé vs le gel classique, utile sur sorties chaudes/longues.'},
+    {id:'std-ta-caf', name:'TA Energy gel (CAF)', unit:'gel (40 ml)', cho:33, na:50, caf:50, cat:'Gels', note:''},
+    {id:'std-gel-plus', name:'Energy Gel+ Decathlon', unit:'gel (46 g / 35 ml)', cho:30, na:70, caf:0, cat:'Gels', note:'Nouvelle formule : ratio glucose:fructose 2:1 (26g de sucres sur les 30g de glucides), vitamines B1/B6/B12.'},
+    {id:'std-108', name:'Gel 1:0.8 Decathlon (Neutre / Citron / Cola)', unit:'gel (45 ml)', cho:40, na:100, caf:0, cat:'Gels', note:'Contient de la vitamine D3, sans conservateurs/colorants/arômes artificiels. À ne pas confondre avec le "Mix gel 1:0.8" 226ERS vendu en marketplace (55g CHO / 250mg Na, produit différent).'},
+    {id:'std-ta-gum', name:'TA Energy gommes (normal)', unit:'sachet (3 gommes)', cho:24, na:114, caf:0, cat:'Gommes', note:'Sodium estimé à partir d\'une étiquette réelle (0,95g sel/100g → sodium = sel÷2,5) ; non publié tel quel par la marque.'},
+    {id:'std-ta-gum-sale', name:'TA Energy gommes (salé)', unit:'sachet (3 gommes)', cho:24, na:228, caf:0, cat:'Gommes', note:'Sel ajouté (~0,58g/sachet), saveurs Margarita Citron Vert et Ananas/Litchi — pensé pour fortes chaleurs / ultra-endurance.'},
+    {id:'std-ta-gum-caf', name:'TA Energy gommes (CAF)', unit:'sachet (3 gommes)', cho:24, na:114, caf:50, cat:'Gommes', note:'Parfums Cola/Cassis/Cranberry-Pomme/Orange sanguine. Sodium estimé (voir version normale).'},
+    {id:'std-ta-gum-caf-strong', name:'TA Energy gommes (CAF renforcée)', unit:'sachet (3 gommes)', cho:24, na:114, caf:100, cat:'Gommes', note:'Parfums Pamplemousse/Tropical. Sodium estimé (voir version normale).'}
+  ];
+
+  const CAT_ORDER = ['Hydratation','Électrolytes','Gels','Gommes','Barres','Compotes','Autres','Personnalisé'];
+  const NEW_CATS = ['Hydratation','Électrolytes','Gels','Gommes','Barres','Compotes','Autres'];
+  function catOptionsHTML(selected){
+    const cats = NEW_CATS.slice();
+    if(selected && cats.indexOf(selected)===-1) cats.push(selected); // conserve une catégorie ancienne/inconnue (ex: 'Personnalisé') sans la perdre à l'édition
+    return cats.map(c=>'<option value="'+esc(c)+'"'+(c===selected?' selected':'')+'>'+esc(c)+'</option>').join('');
+  }
+
+  // ---------------- STATE ----------------
+  let state = {
+    sessions: [],
+    products: [],
+    settings: {raceName:'', raceDate:''},
+    quantities: {},
+    type: 'plan',
+    editingId: null,
+    editingSessionId: null,
+    editingSessionOriginalType: null
+  };
+
+  // ---------------- STORAGE ----------------
+  async function loadAll(){
+    try{
+      const r = await window.storage.get('nutrition-sessions', false);
+      state.sessions = (r && r.value) ? JSON.parse(r.value) : [];
+    }catch(e){ state.sessions = []; }
+    try{
+      const r = await window.storage.get('nutrition-products', false);
+      state.products = (r && r.value) ? JSON.parse(r.value) : null;
+    }catch(e){ state.products = null; }
+    if(!state.products){
+      let migrated = [];
+      try{
+        const r2 = await window.storage.get('nutrition-custom-products', false);
+        if(r2 && r2.value) migrated = JSON.parse(r2.value).map(p=>Object.assign({note:''},p,{isDefault:false}));
+      }catch(e){}
+      state.products = DEFAULTS.map(p=>Object.assign({},p,{isDefault:true})).concat(migrated);
+      await persistProducts();
+    } else {
+      state.products = state.products.map(p=>Object.assign({note:''},p));
+    }
+    try{
+      const r3 = await window.storage.get('nutrition-settings', false);
+      state.settings = (r3 && r3.value) ? JSON.parse(r3.value) : {raceName:'', raceDate:''};
+    }catch(e){ state.settings = {raceName:'', raceDate:''}; }
+  }
+  async function persistSessions(){
+    try{ await window.storage.set('nutrition-sessions', JSON.stringify(state.sessions), false); }catch(e){}
+  }
+  async function persistProducts(){
+    try{ await window.storage.set('nutrition-products', JSON.stringify(state.products), false); }catch(e){}
+  }
+  async function persistSettings(){
+    try{ await window.storage.set('nutrition-settings', JSON.stringify(state.settings), false); }catch(e){}
+  }
+
+  function allProducts(){ return state.products; }
+  function durationMinutes(){
+    const h = parseFloat(document.getElementById('durH').value)||0;
+    const m = parseFloat(document.getElementById('durM').value)||0;
+    return h*60+m;
+  }
+
+  // ---------------- RENDER: BIB / SETTINGS ----------------
+  function renderBib(){
+    const title = document.getElementById('bibTitle');
+    const sub = document.getElementById('bibSub');
+    title.textContent = state.settings.raceName ? state.settings.raceName.toUpperCase() : 'SUIVI RAVITO';
+    if(state.settings.raceDate){
+      const d = new Date(state.settings.raceDate+'T00:00:00');
+      const dateFr = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+      const today = new Date(); today.setHours(0,0,0,0);
+      const days = Math.round((d-today)/86400000);
+      sub.innerHTML = 'Course le <b>'+dateFr+'</b>'+(days>=0?' · dans <b>'+days+' j</b>':'');
+    } else if(state.settings.raceName){
+      sub.textContent = 'Ajoute une date pour voir le compte à rebours.';
+    } else {
+      sub.textContent = 'Ajoute le nom et la date de ta course pour personnaliser cette page.';
+    }
+  }
+  document.getElementById('bibEditBtn').addEventListener('click', ()=>{
+    document.getElementById('bibNameInput').value = state.settings.raceName || '';
+    document.getElementById('bibDateInput').value = state.settings.raceDate || '';
+    document.getElementById('bibDisplay').style.display = 'none';
+    document.getElementById('bibEditForm').style.display = 'flex';
+  });
+  document.getElementById('bibCancelBtn').addEventListener('click', ()=>{
+    document.getElementById('bibDisplay').style.display = 'block';
+    document.getElementById('bibEditForm').style.display = 'none';
+  });
+  document.getElementById('bibSaveBtn').addEventListener('click', async ()=>{
+    state.settings.raceName = document.getElementById('bibNameInput').value.trim();
+    state.settings.raceDate = document.getElementById('bibDateInput').value;
+    await persistSettings();
+    renderBib();
+    renderNextBanner();
+    document.getElementById('bibDisplay').style.display = 'block';
+    document.getElementById('bibEditForm').style.display = 'none';
+  });
+
+  // ---------------- RENDER: NEXT BANNER ----------------
+  function renderNextBanner(){
+    const el = document.getElementById('nextBanner');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const upcoming = state.sessions
+      .filter(s=>s.type==='plan' && s.date)
+      .map(s=>Object.assign({}, s, {sd:new Date(s.date+'T00:00:00')}))
+      .filter(s=>s.sd>=today)
+      .sort((a,b)=>a.sd-b.sd);
+    if(upcoming.length){
+      const s = upcoming[0];
+      const days = Math.round((s.sd-today)/86400000);
+      const dateFr = s.sd.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+      const tgt = s.target_cho_h ? ' · cible <b>'+s.target_cho_h+' g/h</b>' : '';
+      el.innerHTML = '<div class="dot"></div><div>Prochaine séance planifiée : '+(s.week?'<b>'+esc(s.week)+'</b> — ':'')+dateFr+' ('+(days===0?'aujourd\'hui':'dans '+days+' j')+')'+tgt+'</div>';
+      return;
+    }
+    if(state.settings.raceDate){
+      const d = new Date(state.settings.raceDate+'T00:00:00');
+      const days = Math.round((d-today)/86400000);
+      if(days>=0){
+        el.innerHTML = '<div class="dot"></div><div>Aucune séance planifiée à venir. Ta course est dans <b>'+days+' j</b>.</div>';
+        return;
+      }
+    }
+    el.innerHTML = '<div class="dot"></div><div>Aucune séance planifiée à venir — ajoutes-en une dans l\'onglet Séance.</div>';
+  }
+
+  // ---------------- RENDER: PRODUCT LIST ----------------
+  function renderProducts(){
+    const products = allProducts();
+    const byCat = {};
+    products.forEach(p=>{ (byCat[p.cat] = byCat[p.cat]||[]).push(p); });
+    let html = '';
+    CAT_ORDER.forEach(cat=>{
+      if(!byCat[cat]) return;
+      html += '<div class="cat-title">'+esc(cat)+'</div>';
+      byCat[cat].forEach(p=>{
+        html += (state.editingId===p.id) ? editRowHTML(p) : normalRowHTML(p);
+      });
+    });
+    document.getElementById('productList').innerHTML = html;
+    bindProductListEvents();
+  }
+
+  function normalRowHTML(p){
+    const qty = state.quantities[p.id]||0;
+    return '<div class="prod-row">'+
+      '<div class="prod-info"><div class="prod-name">'+esc(p.name)+'</div>'+
+      '<div class="prod-meta">'+esc(p.unit)+' · <span class="m-cho">'+p.cho+'g CHO</span> · <span class="m-na">'+p.na+'mg Na</span>'+(p.caf?' · <span class="m-caf">'+p.caf+'mg caf</span>':'')+'</div>'+
+      (p.note?'<div class="prod-note">⚠ '+esc(p.note)+'</div>':'')+
+      '</div>'+
+      '<div class="qty-group">'+
+        '<button type="button" data-act="dec" data-id="'+p.id+'">–</button>'+
+        '<input type="number" step="0.5" min="0" value="'+qty+'" data-id="'+p.id+'" class="qty-input">'+
+        '<button type="button" data-act="inc" data-id="'+p.id+'">+</button>'+
+      '</div>'+
+      '<button class="edit-pencil" data-edit="'+p.id+'" title="Modifier les valeurs">✎</button>'+
+      '<button class="del-x" data-del="'+p.id+'" title="Supprimer ce produit">✕</button>'+
+    '</div>';
+  }
+
+  function editRowHTML(p){
+    return '<div class="prod-row editing">'+
+      '<div class="edit-grid">'+
+        '<div class="ef ef-full"><label>Nom</label><input type="text" class="ef-name" value="'+esc(p.name)+'"></div>'+
+        '<div class="ef ef-full"><label>Catégorie</label><select class="ef-cat">'+catOptionsHTML(p.cat)+'</select></div>'+
+        '<div class="ef"><label>Unité</label><input type="text" class="ef-unit" value="'+esc(p.unit)+'"></div>'+
+        '<div class="ef"><label>CHO g</label><input type="number" step="0.1" class="ef-cho" value="'+p.cho+'"></div>'+
+        '<div class="ef"><label>Na mg</label><input type="number" step="1" class="ef-na" value="'+p.na+'"></div>'+
+        '<div class="ef"><label>Caf mg</label><input type="number" step="1" class="ef-caf" value="'+p.caf+'"></div>'+
+        '<div class="ef ef-full"><label>Remarque</label><input type="text" class="ef-note" value="'+esc(p.note||'')+'" placeholder="ex: sodium non confirmé"></div>'+
+      '</div>'+
+      '<div class="edit-actions">'+
+        '<button class="btn small" data-save="'+p.id+'">Enregistrer</button>'+
+        '<button class="btn ghost small" data-cancel="'+p.id+'">Annuler</button>'+
+        (p.isDefault ? '<button class="btn ghost small" data-resetdef="'+p.id+'">Rétablir défaut</button>' : '')+
+      '</div>'+
+    '</div>';
+  }
+
+  function bindProductListEvents(){
+    document.querySelectorAll('.qty-input').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const id = e.target.getAttribute('data-id');
+        state.quantities[id] = parseFloat(e.target.value)||0;
+        updateSummary();
+      });
+    });
+    document.querySelectorAll('[data-act]').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        const id = e.currentTarget.getAttribute('data-id');
+        const act = e.currentTarget.getAttribute('data-act');
+        const cur = state.quantities[id]||0;
+        const next = act==='inc' ? cur+1 : Math.max(0,cur-1);
+        state.quantities[id] = next;
+        const input = document.querySelector('.qty-input[data-id="'+id+'"]');
+        if(input) input.value = next;
+        updateSummary();
+      });
+    });
+    document.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.addEventListener('click', async e=>{
+        const id = e.currentTarget.getAttribute('data-del');
+        const prod = state.products.find(p=>p.id===id);
+        const msg = prod && prod.isDefault
+          ? 'Supprimer "'+prod.name+'" ? C\'est un produit de référence — tu pourras le restaurer plus tard via "Restaurer les produits par défaut".'
+          : 'Supprimer ce produit ?';
+        if(!confirm(msg)) return;
+        state.products = state.products.filter(p=>p.id!==id);
+        delete state.quantities[id];
+        await persistProducts();
+        renderProducts();
+        renderSolverOptions();
+        updateSummary();
+      });
+    });
+    document.querySelectorAll('[data-edit]').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        state.editingId = e.currentTarget.getAttribute('data-edit');
+        renderProducts();
+      });
+    });
+    document.querySelectorAll('[data-cancel]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        state.editingId = null;
+        renderProducts();
+      });
+    });
+    document.querySelectorAll('[data-resetdef]').forEach(btn=>{
+      btn.addEventListener('click', async e=>{
+        const id = e.currentTarget.getAttribute('data-resetdef');
+        const def = DEFAULTS.find(d=>d.id===id);
+        if(!def) return;
+        const idx = state.products.findIndex(p=>p.id===id);
+        if(idx>-1){
+          state.products[idx] = Object.assign({}, def, {isDefault:true});
+          await persistProducts();
+        }
+        state.editingId = null;
+        renderProducts();
+        renderSolverOptions();
+        updateSummary();
+      });
+    });
+    document.querySelectorAll('[data-save]').forEach(btn=>{
+      btn.addEventListener('click', async e=>{
+        const id = e.currentTarget.getAttribute('data-save');
+        const row = e.currentTarget.closest('.prod-row');
+        const name = row.querySelector('.ef-name').value.trim();
+        const unit = row.querySelector('.ef-unit').value.trim() || 'unité';
+        const cho = parseFloat(row.querySelector('.ef-cho').value)||0;
+        const na = parseFloat(row.querySelector('.ef-na').value)||0;
+        const caf = parseFloat(row.querySelector('.ef-caf').value)||0;
+        const note = row.querySelector('.ef-note').value.trim();
+        const cat = row.querySelector('.ef-cat').value;
+        if(!name){ alert('Le nom ne peut pas être vide.'); return; }
+        const idx = state.products.findIndex(p=>p.id===id);
+        if(idx>-1){
+          state.products[idx] = Object.assign({}, state.products[idx], {name,unit,cho,na,caf,note,cat});
+          await persistProducts();
+        }
+        state.editingId = null;
+        renderProducts();
+        renderSolverOptions();
+        updateSummary();
+      });
+    });
+  }
+
+  // ---------------- SOLVER ----------------
+  function renderSolverOptions(){
+    const sel = document.getElementById('solverProduct');
+    sel.innerHTML = allProducts().map(p=>'<option value="'+p.id+'">'+esc(p.name)+' ('+p.cho+'g CHO/'+esc(p.unit)+')</option>').join('');
+  }
+  document.getElementById('solverBtn').addEventListener('click', ()=>{
+    const id = document.getElementById('solverProduct').value;
+    const p = allProducts().find(x=>x.id===id);
+    const target = parseFloat(document.getElementById('targetInput').value);
+    const dur = durationMinutes();
+    const resEl = document.getElementById('solverResult');
+    if(!p || !target || target<=0 || dur<=0){
+      resEl.textContent = 'Renseigne une cible (g/h) et une durée avant de calculer.';
+      return;
+    }
+    if(p.cho<=0){
+      resEl.textContent = p.name+' n\'apporte pas de glucides — choisis un produit énergétique.';
+      return;
+    }
+    const totalTargetCho = target * (dur/60);
+    const count = Math.ceil(totalTargetCho / p.cho * 2)/2;
+    const interval = dur / count;
+    state.quantities[p.id] = count;
+    const input = document.querySelector('.qty-input[data-id="'+p.id+'"]');
+    if(input) input.value = count;
+    updateSummary();
+    resEl.innerHTML = '→ <b style="color:var(--cho)">'+fmt(count,1)+'</b> '+esc(p.unit)+' de "'+esc(p.name)+'" pour '+fmt(totalTargetCho,0)+' g CHO sur '+Math.round(dur)+' min — soit environ 1 prise toutes les <b>'+fmt(interval,0)+' min</b>. Quantité ajoutée à la séance.';
+  });
+
+  // ---------------- SUMMARY / GAUGE ----------------
+  function updateSummary(){
+    const products = allProducts();
+    let cho=0, na=0, caf=0;
+    products.forEach(p=>{
+      const q = state.quantities[p.id]||0;
+      cho += q*p.cho; na += q*p.na; caf += q*p.caf;
+    });
+    const dur = durationMinutes();
+    const hours = dur/60;
+    const choH = hours>0 ? cho/hours : 0;
+    const naH = hours>0 ? na/hours : 0;
+    const target = parseFloat(document.getElementById('targetInput').value);
+
+    document.getElementById('totCho').textContent = fmt(cho,0)+' g';
+    document.getElementById('totNa').textContent = fmt(na,0)+' mg';
+    document.getElementById('rateNa').textContent = hours>0 ? fmt(naH,0)+' mg/h' : '—';
+    document.getElementById('totCaf').textContent = fmt(caf,0)+' mg';
+
+    document.getElementById('gaugeVal').textContent = fmt(choH,0);
+
+    const gauge = document.getElementById('gauge');
+    const label = document.getElementById('gaugeLabel');
+    if(target && target>0){
+      const pctOfTarget = (choH/target)*100;
+      const ringPct = Math.max(2, Math.min(100, pctOfTarget));
+      gauge.style.setProperty('--pct', ringPct);
+      let color = 'var(--bad)';
+      if(pctOfTarget>=95 && pctOfTarget<=115) color = 'var(--good)';
+      else if((pctOfTarget>=80&&pctOfTarget<95) || (pctOfTarget>115&&pctOfTarget<=140)) color = 'var(--warn)';
+      gauge.style.setProperty('--ring', color);
+      label.innerHTML = fmt(pctOfTarget,0)+'% de la cible ('+target+' g/h)';
+    } else {
+      gauge.style.setProperty('--pct', Math.min(100,(choH/90)*100));
+      gauge.style.setProperty('--ring', 'var(--text-dimmer)');
+      label.textContent = 'Aucune cible définie';
+    }
+    renderTimingPlan();
+  }
+
+  // ---------------- TIMING PLAN ----------------
+  // Chaque catégorie de produit a une logique de prise différente :
+  // - Hydratation : consigne continue (gorgée régulière dès le départ)
+  // - Électrolytes : cadence horaire fixe, indépendante des glucides
+  // - Gels/gommes/personnalisé (glucides) : entrelacement proportionnel pour
+  //   éviter de regrouper plusieurs prises de glucides trop près les unes des autres
+  function renderTimingPlan(){
+    const container = document.getElementById('timingPlan');
+    const dur = durationMinutes();
+    const hours = dur/60;
+    const products = allProducts();
+
+    const hydroItems = [];
+    const electroItems = [];
+    const choItems = [];
+    products.forEach(p=>{
+      const q = state.quantities[p.id]||0;
+      if(q<=0) return;
+      if(p.cat==='Hydratation'){
+        hydroItems.push({name:p.name, qty:q});
+      } else if(p.cat==='Électrolytes'){
+        const n = Math.max(1, Math.round(q));
+        for(let i=0;i<n;i++) electroItems.push({name:p.name, unit:p.unit});
+      } else {
+        choItems.push({name:p.name, unit:p.unit, qty:q});
+      }
+    });
+
+    if(dur<=0 || (hydroItems.length===0 && electroItems.length===0 && choItems.length===0)){
+      container.innerHTML = '<div class="empty">Ajoute une durée et au moins un produit ci-dessus pour générer un plan de prise.</div>';
+      return;
+    }
+
+    let html = '';
+    const durH = Math.floor(dur/60), durM = Math.round(dur%60);
+    const durLabel = durH>0 ? durH+'h'+String(durM).padStart(2,'0') : dur+' min';
+    const sectionsCount = (hydroItems.length>0?1:0)+(electroItems.length>0?1:0)+(choItems.length>0?1:0);
+    const multi = sectionsCount>1;
+
+    // ---- Boisson (hydratation) : consigne continue, pas d'horaires ponctuels ----
+    if(hydroItems.length>0){
+      const totalQty = hydroItems.reduce((s,it)=>s+it.qty,0);
+      const recommended = Math.max(1, Math.round(hours));
+      const names = hydroItems.map(it=>it.name).join(' + ');
+      html += '<div class="timing-hydro">'+
+        '<div class="timing-hydro-title">💧 '+esc(names)+'</div>'+
+        '<div class="timing-hydro-body">Départ <b>0:00</b> — petite gorgée toutes les <b>15 min</b> tout au long de la séance. '+
+        'Rythme visé : ~1 dose/h, soit environ <b>'+recommended+'</b> dose(s) sur cette séance de '+durLabel+'. '+
+        (totalQty < recommended
+          ? 'Tu as prévu <b>'+fmt(totalQty,1)+'</b> — complète avec de l\'eau si ça ne suffit pas.'
+          : 'Tu as prévu <b>'+fmt(totalQty,1)+'</b>, ça couvre le rythme visé.')+
+        '</div></div>';
+    }
+
+    // ---- Électrolytes : cadence horaire fixe (1/h), indépendante des glucides ----
+    // Ils ne servent pas à espacer la digestion de glucides comme les gels, donc
+    // ils ne rentrent pas dans l'entrelacement proportionnel — juste 1 par heure,
+    // en parallèle de la boisson.
+    if(electroItems.length>0){
+      if(multi) html += '<div class="cat-title">Électrolytes — 1 par heure, en complément de la boisson</div>';
+      html += electroItems.map((it,idx)=>{
+        let t = (idx+1)*60;
+        if(t>dur) t = Math.max(1, dur-2);
+        const h = Math.floor(t/60), mm = Math.round(t%60);
+        const label = h>0 ? h+'h'+String(mm).padStart(2,'0') : Math.round(t)+' min';
+        return '<div class="timing-row"><div class="timing-time">'+label+'</div>'+
+          '<div class="timing-name">'+esc(it.name)+' <span class="u">('+esc(it.unit)+')</span></div></div>';
+      }).join('');
+    }
+
+    // ---- Gels / gommes / personnalisé (glucides) : entrelacement proportionnel ----
+    // Chaque produit calculé isolément atterrit toujours vers le même point relatif
+    // (ex: 2 produits à 1 prise visent tous les deux le milieu). On construit plutôt
+    // une seule séquence commune à tous les produits glucidiques, en piochant à chaque
+    // tour le produit le plus "en retard" par rapport à sa part proportionnelle
+    // (file d'attente équitable), puis on étale cette séquence sur toute la durée.
+    if(choItems.length>0){
+      if(multi) html += '<div class="cat-title">Gels &amp; gommes — espacés pour la digestion des glucides</div>';
+      const weighted = choItems.map(it=>({name:it.name, unit:it.unit, weight:Math.max(1,Math.round(it.qty))}));
+      const N = weighted.reduce((s,it)=>s+it.weight,0);
+      const assigned = weighted.map(()=>0);
+      const order = [];
+      for(let k=1;k<=N;k++){
+        let bestIdx=-1, bestScore=-Infinity;
+        weighted.forEach((it,idx)=>{
+          const score = (k*it.weight/N) - assigned[idx];
+          if(score>bestScore){ bestScore=score; bestIdx=idx; }
+        });
+        assigned[bestIdx]++;
+        order.push(weighted[bestIdx]);
+      }
+      html += order.map((it,idx)=>{
+        const t = dur*(idx+1)/(N+1);
+        const h = Math.floor(t/60), mm = Math.round(t%60);
+        const label = h>0 ? h+'h'+String(mm).padStart(2,'0') : Math.round(t)+' min';
+        return '<div class="timing-row"><div class="timing-time">'+label+'</div>'+
+          '<div class="timing-name">'+esc(it.name)+' <span class="u">('+esc(it.unit)+')</span></div></div>';
+      }).join('');
+    }
+
+    container.innerHTML = html;
+  }
+
+  // ---------------- CUSTOM PRODUCT ----------------
+  document.getElementById('addCustomBtn').addEventListener('click', async ()=>{
+    const name = document.getElementById('cpName').value.trim();
+    const cat = document.getElementById('cpCat').value;
+    const unit = document.getElementById('cpUnit').value.trim() || 'unité';
+    const cho = parseFloat(document.getElementById('cpCho').value)||0;
+    const na = parseFloat(document.getElementById('cpNa').value)||0;
+    const caf = parseFloat(document.getElementById('cpCaf').value)||0;
+    const note = document.getElementById('cpNote').value.trim();
+    if(!name){ alert('Donne un nom au produit.'); return; }
+    const id = 'custom-'+Date.now();
+    state.products.push({id,name,unit,cho,na,caf,note,cat,isDefault:false});
+    await persistProducts();
+    document.getElementById('cpName').value='';
+    document.getElementById('cpCho').value='';
+    document.getElementById('cpNa').value='';
+    document.getElementById('cpCaf').value='';
+    document.getElementById('cpNote').value='';
+    renderProducts();
+    renderSolverOptions();
+  });
+
+  document.getElementById('restoreDefaultsBtn').addEventListener('click', async ()=>{
+    const presentIds = new Set(state.products.map(p=>p.id));
+    const missing = DEFAULTS.filter(d=>!presentIds.has(d.id)).map(d=>Object.assign({},d,{isDefault:true}));
+    if(missing.length===0){ alert('Tous les produits par défaut sont déjà présents.'); return; }
+    state.products = state.products.concat(missing);
+    await persistProducts();
+    renderProducts();
+    renderSolverOptions();
+    alert(missing.length+' produit(s) par défaut restauré(s).');
+  });
+
+  // ---------------- EXPORT / IMPORT — BIBLIOTHÈQUE PRODUITS ----------------
+  document.getElementById('exportProductsBtn').addEventListener('click', ()=>{
+    const payload = { exported_at: new Date().toISOString(), products: state.products };
+    const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ravito-produits-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('importProductsBtn').addEventListener('click', ()=>{
+    document.getElementById('importProductsFile').click();
+  });
+
+  document.getElementById('importProductsFile').addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async evt=>{
+      try{
+        const data = JSON.parse(evt.target.result);
+        const list = Array.isArray(data) ? data : (data && Array.isArray(data.products) ? data.products : null);
+        if(!list) throw new Error('Format invalide : attendu un tableau de produits, ou {"products":[...]}.');
+        const cleaned = list.filter(p=>p && p.name).map(p=>({
+          id: p.id || ('custom-'+Date.now()+'-'+Math.random().toString(36).slice(2,6)),
+          name: p.name, unit: p.unit || 'unité',
+          cho: Number(p.cho)||0, na: Number(p.na)||0, caf: Number(p.caf)||0,
+          cat: p.cat || 'Autres', note: p.note || '', isDefault: !!p.isDefault
+        }));
+        if(cleaned.length===0) throw new Error('Aucun produit valide trouvé dans ce fichier.');
+        const mode = confirm(
+          'Remplacer toute ta bibliothèque de produits par celle du fichier ?\n\n'+
+          'OK = Remplacer\nAnnuler = Fusionner (ajouter sans écraser les produits existants)'
+        ) ? 'replace' : 'merge';
+        if(mode==='replace'){
+          state.products = cleaned;
+        } else {
+          const existingIds = new Set(state.products.map(p=>p.id));
+          cleaned.forEach(p=>{
+            const finalP = existingIds.has(p.id)
+              ? Object.assign({}, p, {id: p.id+'-import-'+Date.now()+Math.random().toString(36).slice(2,4)})
+              : p;
+            state.products.push(finalP);
+            existingIds.add(finalP.id);
+          });
+        }
+        await persistProducts();
+        renderProducts();
+        renderSolverOptions();
+        updateSummary();
+        alert('Import terminé : '+cleaned.length+' produit(s) dans le fichier.');
+      }catch(err){
+        alert('Impossible de lire ce fichier : '+err.message);
+      }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  // ---------------- SAVE SESSION ----------------
+  document.getElementById('saveBtn').addEventListener('click', async ()=>{
+    const products = allProducts();
+    const items = [];
+    let cho=0, na=0, caf=0;
+    products.forEach(p=>{
+      const q = state.quantities[p.id]||0;
+      if(q>0){
+        items.push({id:p.id, name:p.name, qty:q, unit:p.unit, cho:p.cho, na:p.na, caf:p.caf, cat:p.cat});
+        cho += q*p.cho; na += q*p.na; caf += q*p.caf;
+      }
+    });
+    if(items.length===0){ alert('Ajoute au moins un produit avant d\'enregistrer.'); return; }
+    const dur = durationMinutes();
+    const target = parseFloat(document.getElementById('targetInput').value) || null;
+    const dateStr = document.getElementById('sessDate').value;
+    const week = document.getElementById('sessWeek').value.trim();
+    const isEdit = !!state.editingSessionId;
+    // Si on convertit une Prévision en Réalisé (le type a changé pendant l'édition),
+    // on crée une NOUVELLE séance liée plutôt que d'écraser la prévision d'origine —
+    // sinon la liste "prévu" disparaît et on ne peut plus la comparer au "réalisé".
+    const isConverting = isEdit && state.editingSessionOriginalType==='plan' && state.type==='realise';
+    const willOverwrite = isEdit && !isConverting;
+    const session = {
+      id: willOverwrite ? state.editingSessionId : 'sess-'+Date.now(),
+      week: week || null,
+      date: dateStr || null,
+      type: state.type,
+      duration_min: dur,
+      target_cho_h: target,
+      total_cho: cho, total_na: na, total_caf: caf,
+      items: items,
+      notes: document.getElementById('sessNotes').value.trim(),
+      linkedPlanId: isConverting ? state.editingSessionId : null
+    };
+    if(willOverwrite){
+      const idx = state.sessions.findIndex(s=>s.id===state.editingSessionId);
+      if(idx>-1) state.sessions[idx] = session; else state.sessions.push(session);
+    } else {
+      state.sessions.push(session);
+    }
+    await persistSessions();
+    exitEditSessionMode();
+    renderNextBanner();
+    renderPlanList();
+    renderHistList();
+    switchTab(session.type==='plan' ? 'planifiees' : 'historique');
+    alert(isConverting ? 'Séance réalisée enregistrée — la prévision d\'origine reste dans "Planifiées" pour comparaison.'
+      : isEdit ? 'Séance mise à jour.' : (session.type==='plan' ? 'Séance planifiée enregistrée.' : 'Séance enregistrée dans l\'historique.'));
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    state.quantities = {};
+    document.querySelectorAll('.qty-input').forEach(inp=>inp.value=0);
+    document.getElementById('sessNotes').value='';
+    document.getElementById('sessWeek').value='';
+    document.getElementById('solverResult').textContent='';
+    updateSummary();
+  });
+
+  document.getElementById('cancelEditBtn').addEventListener('click', ()=>{
+    exitEditSessionMode();
+    document.getElementById('resetBtn').click();
+  });
+
+  function exitEditSessionMode(){
+    state.editingSessionId = null;
+    state.editingSessionOriginalType = null;
+    document.getElementById('saveBtn').textContent = 'Enregistrer';
+    document.getElementById('cancelEditBtn').style.display = 'none';
+    document.getElementById('editingBanner').style.display = 'none';
+  }
+
+  async function enterEditSession(id){
+    const session = state.sessions.find(s=>s.id===id);
+    if(!session) return;
+
+    state.type = session.type || 'plan';
+    document.querySelectorAll('.seg-btn').forEach(b=>b.classList.toggle('active', b.getAttribute('data-type')===state.type));
+
+    document.getElementById('sessWeek').value = session.week || '';
+    document.getElementById('sessDate').value = session.date || '';
+
+    const totalMin = session.duration_min || 0;
+    document.getElementById('durH').value = Math.floor(totalMin/60);
+    document.getElementById('durM').value = Math.round(totalMin%60);
+
+    document.getElementById('targetInput').value = session.target_cho_h != null ? session.target_cho_h : '';
+
+    state.quantities = {};
+    let productsChanged = false;
+    (session.items||[]).forEach(item=>{
+      let prod = item.id ? state.products.find(p=>p.id===item.id) : null;
+      if(!prod) prod = state.products.find(p=>p.name===item.name);
+      if(!prod){
+        prod = {
+          id:'custom-restored-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
+          name:item.name, unit:item.unit||'unité',
+          cho:item.cho||0, na:item.na||0, caf:item.caf||0, note:'',
+          cat:'Personnalisé', isDefault:false
+        };
+        state.products.push(prod);
+        productsChanged = true;
+      }
+      state.quantities[prod.id] = item.qty;
+    });
+    if(productsChanged) await persistProducts();
+
+    document.getElementById('sessNotes').value = session.notes || '';
+
+    state.editingSessionId = id;
+    state.editingSessionOriginalType = session.type || 'plan';
+    document.getElementById('saveBtn').textContent = 'Mettre à jour la séance';
+    document.getElementById('cancelEditBtn').style.display = 'block';
+    const banner = document.getElementById('editingBanner');
+    banner.style.display = 'block';
+    banner.innerHTML = 'Modification de : <b style="color:var(--text)">'+(session.week?esc(session.week)+' — ':'')+(session.type==='plan'?'Prévision':'Réalisé')+'</b>';
+
+    renderProducts();
+    renderSolverOptions();
+    updateSummary();
+    switchTab('seance');
+  }
+
+  // ---------------- SESSION LISTS (planifiées / historique) ----------------
+  function comparisonHTML(planSession, realiseSession){
+    const planMap = {};
+    (planSession.items||[]).forEach(it=>{ planMap[it.name] = (planMap[it.name]||0) + it.qty; });
+    const realMap = {};
+    (realiseSession.items||[]).forEach(it=>{ realMap[it.name] = (realMap[it.name]||0) + it.qty; });
+    const names = Array.from(new Set(Object.keys(planMap).concat(Object.keys(realMap))));
+    const rows = names.map(name=>{
+      const p = planMap[name]||0, r = realMap[name]||0;
+      const diff = r-p;
+      const diffTxt = diff===0 ? '' : (diff>0
+        ? ' <span style="color:var(--good)">(+'+fmt(Math.abs(diff),1)+')</span>'
+        : ' <span style="color:var(--bad)">(−'+fmt(Math.abs(diff),1)+')</span>');
+      return '<div class="cmp-row"><span class="cmp-name">'+esc(name)+'</span><span class="cmp-vals">'+fmt(p,1)+' → '+fmt(r,1)+diffTxt+'</span></div>';
+    }).join('');
+    const choDiff = realiseSession.total_cho - planSession.total_cho;
+    const choDiffTxt = choDiff===0 ? '' : (choDiff>0
+      ? ' <span style="color:var(--good)">(+'+fmt(Math.abs(choDiff),0)+'g)</span>'
+      : ' <span style="color:var(--bad)">(−'+fmt(Math.abs(choDiff),0)+'g)</span>');
+    return '<div class="cmp-block"><div class="cmp-title">Prévu → Réalisé</div>'+rows+
+      '<div class="cmp-row cmp-total"><span class="cmp-name">Total CHO</span><span class="cmp-vals">'+fmt(planSession.total_cho,0)+'g → '+fmt(realiseSession.total_cho,0)+'g'+choDiffTxt+'</span></div>'+
+      '</div>';
+  }
+
+  function sessionRowHTML(s){
+    const hours = (s.duration_min||0)/60;
+    const choH = hours>0 ? s.total_cho/hours : 0;
+    const naH = hours>0 ? s.total_na/hours : 0;
+    const pct = s.target_cho_h ? (choH/s.target_cho_h*100) : null;
+    let barColor = 'var(--text-dimmer)';
+    if(pct!=null){
+      if(pct>=95&&pct<=115) barColor='var(--good)';
+      else if((pct>=80&&pct<95)||(pct>115&&pct<=140)) barColor='var(--warn)';
+      else barColor='var(--bad)';
+    }
+    const barWidth = pct!=null ? Math.max(3,Math.min(100,pct)) : Math.min(100,(choH/90)*100);
+    const dateFr = s.date ? new Date(s.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'}) : 'Sans date';
+    const itemsTxt = (s.items||[]).map(it=>fmt(it.qty,1)+'× '+esc(it.name)).join(' · ');
+    const durTxt = Math.floor(hours)+'h'+String(Math.round((s.duration_min||0)%60)).padStart(2,'0');
+
+    // Une prévision convertie a une réalisée liée (linkedPlanId) ; on affiche un badge
+    // discret côté prévision, et un comparatif produit par produit côté réalisée.
+    const linkedRealise = s.type==='plan' ? state.sessions.find(x=>x.linkedPlanId===s.id) : null;
+    const linkedPlan = (s.type==='realise' && s.linkedPlanId) ? state.sessions.find(x=>x.id===s.linkedPlanId) : null;
+
+    return '<div class="hist-row">'+
+      '<div class="hist-row-actions">'+
+        '<button class="hist-action" data-hedit="'+s.id+'">modifier</button>'+
+        '<button class="hist-action hist-del" data-hid="'+s.id+'">supprimer</button>'+
+      '</div>'+
+      '<div class="hist-top"><div><div class="hist-date">'+(s.week?'<span class="week-chip">'+esc(s.week)+'</span>':'')+dateFr+' · '+durTxt+'</div></div>'+
+      '<div class="hist-tag '+(s.type==='plan'?'plan':'realise')+'">'+(s.type==='plan'?'Prévision':'Réalisé')+'</div></div>'+
+      (linkedRealise?'<div class="hist-linked">✓ convertie en séance réalisée</div>':'')+
+      '<div class="hist-bar-track"><div class="hist-bar-fill" style="width:'+barWidth+'%;background:'+barColor+';"></div></div>'+
+      '<div class="hist-figs"><span>CHO/h <b>'+fmt(choH,1)+'g</b></span><span>Na/h <b>'+fmt(naH,0)+'mg</b></span>'+(pct!=null?'<span>Cible <b>'+fmt(pct,0)+'%</b></span>':'')+'</div>'+
+      (itemsTxt?'<div class="hist-items">'+itemsTxt+'</div>':'')+
+      (s.notes?'<div class="hist-items" style="font-style:italic;">"'+esc(s.notes)+'"</div>':'')+
+      (linkedPlan?comparisonHTML(linkedPlan, s):'')+
+      (s.type==='realise'?'<div class="hist-copy-row"><button class="btn ghost small" data-hcopy="'+s.id+'">📋 Copier pour Strava</button></div>':'')+
+    '</div>';
+  }
+
+  // ---------------- RÉSUMÉ STRAVA ----------------
+  function categoryEmoji(cat){
+    if(cat==='Hydratation') return '💧';
+    if(cat==='Électrolytes') return '🧂';
+    if(cat==='Gels') return '🍯';
+    if(cat==='Gommes') return '🍬';
+    if(cat==='Barres') return '🍫';
+    if(cat==='Compotes') return '🍎';
+    return '🔹';
+  }
+  function itemEmoji(it){
+    if(it.cat) return categoryEmoji(it.cat);
+    const prod = it.id ? state.products.find(p=>p.id===it.id) : state.products.find(p=>p.name===it.name);
+    return categoryEmoji(prod ? prod.cat : null);
+  }
+  function buildStravaSummary(s){
+    const hours = (s.duration_min||0)/60;
+    const choH = hours>0 ? s.total_cho/hours : 0;
+    const naH = hours>0 ? s.total_na/hours : 0;
+    const pct = s.target_cho_h ? (choH/s.target_cho_h*100) : null;
+    const durH = Math.floor((s.duration_min||0)/60), durM = Math.round((s.duration_min||0)%60);
+    const durTxt = durH>0 ? durH+'h'+String(durM).padStart(2,'0') : (s.duration_min||0)+' min';
+
+    const lines = [];
+    lines.push('⚡ Nutrition'+(s.week?' — '+s.week:'')+' · '+durTxt);
+    lines.push('🍞 '+fmt(s.total_cho,0)+'g glucides ('+fmt(choH,1)+'g/h'+(pct!=null?' · '+fmt(pct,0)+'% de la cible':'')+')');
+    lines.push('🧂 '+fmt(s.total_na,0)+'mg sodium ('+fmt(naH,0)+'mg/h)');
+    if(s.total_caf>0) lines.push('☕ '+fmt(s.total_caf,0)+'mg caféine');
+    lines.push('');
+    (s.items||[]).forEach(it=>{
+      lines.push(itemEmoji(it)+' '+fmt(it.qty,1)+'× '+it.name);
+    });
+    return lines.join('\n');
+  }
+  async function copyToClipboard(text){
+    if(navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext){
+      try{
+        await navigator.clipboard.writeText(text);
+        return true;
+      }catch(e){
+        console.error('clipboard.writeText a échoué, repli sur execCommand :', e);
+      }
+    }
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position='fixed'; ta.style.left='-9999px'; ta.style.top='0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    }catch(e2){
+      console.error('Repli execCommand a aussi échoué :', e2);
+      return false;
+    }
+  }
+
+  function bindSessionRowEvents(){
+    document.querySelectorAll('[data-hid]').forEach(btn=>{
+      btn.addEventListener('click', async e=>{
+        const id = e.currentTarget.getAttribute('data-hid');
+        if(!confirm('Supprimer cette séance ?')) return;
+        state.sessions = state.sessions.filter(s=>s.id!==id);
+        if(state.editingSessionId===id) exitEditSessionMode();
+        await persistSessions();
+        renderNextBanner();
+        renderPlanList();
+        renderHistList();
+      });
+    });
+    document.querySelectorAll('[data-hedit]').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        enterEditSession(e.currentTarget.getAttribute('data-hedit'));
+      });
+    });
+    document.querySelectorAll('[data-hcopy]').forEach(btn=>{
+      btn.addEventListener('click', async e=>{
+        const target = e.currentTarget;
+        const id = target.getAttribute('data-hcopy');
+        const s = state.sessions.find(x=>x.id===id);
+        if(!s) return;
+        const text = buildStravaSummary(s);
+        const original = target.textContent;
+
+        let ok = false;
+        try{ ok = await copyToClipboard(text); }
+        catch(err){ console.error('Erreur inattendue lors de la copie :', err); ok = false; }
+
+        if(ok){
+          target.textContent = '✓ Copié !';
+          target.style.background = 'var(--good)';
+          target.style.color = '#0a1f14';
+          target.style.borderColor = 'var(--good)';
+        } else {
+          target.textContent = '⚠ Copie impossible';
+          target.style.background = 'var(--bad)';
+          target.style.color = '#2a0a0a';
+          target.style.borderColor = 'var(--bad)';
+        }
+        // Le revert + la popup de secours sont différés : un window.prompt() juste après
+        // la mutation du DOM bloque le rendu et empêche le changement visuel de s'afficher.
+        setTimeout(()=>{
+          target.textContent = original;
+          target.style.background = '';
+          target.style.color = '';
+          target.style.borderColor = '';
+          if(!ok){
+            window.prompt('Copie automatique impossible — sélectionne et copie ce texte :', text);
+          }
+        }, 1600);
+      });
+    });
+  }
+
+  function renderPlanList(){
+    const el = document.getElementById('planList');
+    const list = state.sessions.filter(s=>s.type==='plan').slice().sort((a,b)=>{
+      const da = a.date || '9999'; const db = b.date || '9999';
+      return da.localeCompare(db);
+    });
+    if(list.length===0){ el.innerHTML = '<div class="empty">Aucune séance planifiée pour l\'instant.</div>'; return; }
+    el.innerHTML = list.map(sessionRowHTML).join('');
+    bindSessionRowEvents();
+  }
+
+  function renderHistList(){
+    const el = document.getElementById('histList');
+    const list = state.sessions.filter(s=>s.type==='realise').slice().sort((a,b)=>{
+      const da = a.date || '0000'; const db = b.date || '0000';
+      return da.localeCompare(db);
+    }).reverse();
+    if(list.length===0){ el.innerHTML = '<div class="empty">Aucune séance enregistrée pour l\'instant.</div>'; return; }
+    el.innerHTML = list.map(sessionRowHTML).join('');
+    bindSessionRowEvents();
+  }
+
+  // ---------------- GRAPHIQUE (progression CHO/h) ----------------
+  // Couleurs et polices écrites en dur (pas de var(--...) ni de classes CSS) :
+  // le SVG doit rester lisible tel quel une fois exporté en PNG, indépendamment
+  // du CSS de la page.
+  const CHART_COLORS = {
+    bg:'#1b1f27', border:'#2e3444', textDim:'#9099ac', text:'#f3f2ed',
+    cho:'#ff8a3d', na:'#3fc7c1', good:'#4ade80', warn:'#fbbf24', bad:'#f87171'
+  };
+  function execColor(pct){
+    if(pct==null) return CHART_COLORS.textDim;
+    if(pct>=95 && pct<=115) return CHART_COLORS.good;
+    if((pct>=80&&pct<95) || (pct>115&&pct<=140)) return CHART_COLORS.warn;
+    return CHART_COLORS.bad;
+  }
+  function niceMax(v){
+    if(v<=0) return 40;
+    const raw = v*1.15;
+    const step = raw<=50 ? 10 : (raw<=100 ? 20 : 25);
+    return Math.ceil(raw/step)*step;
+  }
+  function buildChartData(){
+    // Seules les séances datées peuvent être placées sur un axe temporel réel ;
+    // celles sans date sont simplement exclues du graphique (comptées à part).
+    return state.sessions.filter(s=>s.date).map(s=>{
+      const hours = (s.duration_min||0)/60;
+      const choH = hours>0 ? s.total_cho/hours : 0;
+      const pct = s.target_cho_h ? (choH/s.target_cho_h*100) : null;
+      const ts = new Date(s.date+'T00:00:00').getTime();
+      const dateFr = new Date(s.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+      return {s, choH, target: s.target_cho_h||null, pct, label: s.week||'', dateFr, ts};
+    }).sort((a,b)=>a.ts-b.ts);
+  }
+  function renderChart(){
+    const container = document.getElementById('chartContainer');
+    const statsEl = document.getElementById('chartStats');
+    const exportBtn = document.getElementById('exportChartBtn');
+    const data = buildChartData();
+    const undated = state.sessions.length - data.length;
+    if(data.length===0){
+      container.innerHTML = '<div class="empty">Aucune séance datée pour l\'instant — ajoute une date à tes séances pour voir apparaître le graphique.</div>';
+      statsEl.innerHTML = '';
+      exportBtn.style.display = 'none';
+      return;
+    }
+    exportBtn.style.display = 'inline-block';
+
+    const W=640, H=340;
+    const ML=44, MR=16, MT=36, MB=42;
+    const PW = W-ML-MR, PH = H-MT-MB;
+
+    const allVals = [10];
+    data.forEach(d=>{ allVals.push(d.choH); if(d.target) allVals.push(d.target); });
+    const maxV = niceMax(Math.max.apply(null, allVals));
+
+    const minTs = data[0].ts, maxTs = data[data.length-1].ts;
+    const span = maxTs - minTs;
+    const xAt = (ts)=> span>0 ? ML + PW*(ts-minTs)/span : ML+PW/2;
+    const yAt = (v)=> MT + PH - (v/maxV)*PH;
+
+    let gridSvg = '';
+    const gridSteps = 4;
+    for(let g=0; g<=gridSteps; g++){
+      const v = maxV*g/gridSteps;
+      const y = yAt(v);
+      gridSvg += '<line x1="'+ML+'" y1="'+y+'" x2="'+(W-MR)+'" y2="'+y+'" stroke="'+CHART_COLORS.border+'" stroke-width="1"/>';
+      gridSvg += '<text x="'+(ML-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="10" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">'+Math.round(v)+'</text>';
+    }
+
+    let targetPath = '';
+    let seg = [];
+    data.forEach(d=>{
+      if(d.target!=null){ seg.push(xAt(d.ts)+','+yAt(d.target)); }
+      else { if(seg.length>1) targetPath += 'M'+seg.join('L')+' '; seg=[]; }
+    });
+    if(seg.length>1) targetPath += 'M'+seg.join('L')+' ';
+
+    const choPts = data.map(d=> xAt(d.ts)+','+yAt(d.choH));
+    const choPath = choPts.length>1 ? 'M'+choPts.join('L') : '';
+
+    let pointsSvg = '';
+    data.forEach(d=>{
+      const x=xAt(d.ts), y=yAt(d.choH);
+      const col = execColor(d.pct);
+      const isPlan = d.s.type==='plan';
+      const tip = (d.label?esc(d.label)+' — ':'')+esc(d.dateFr)+' : '+fmt(d.choH,1)+'g/h'+(d.target?' ('+fmt(d.pct,0)+'% de la cible '+d.target+'g/h)':'');
+      pointsSvg += '<circle cx="'+x+'" cy="'+y+'" r="5" fill="'+(isPlan?CHART_COLORS.bg:col)+'" stroke="'+col+'" stroke-width="2.2"><title>'+tip+'</title></circle>';
+    });
+
+    // Graduations de l'axe X : des repères de DATE régulièrement espacés dans le temps
+    // (pas un par séance) — 5 repères si l'intervalle est réel, 1 seul si toutes les
+    // séances tombent à la même date.
+    let xLabelsSvg = '';
+    const y = MT+PH+16;
+    if(span>0){
+      for(let k=0;k<=4;k++){
+        const t = minTs + span*k/4;
+        const x = xAt(t);
+        const lbl = new Date(t).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+        xLabelsSvg += '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="10.5" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">'+lbl+'</text>';
+      }
+    } else {
+      xLabelsSvg += '<text x="'+xAt(minTs)+'" y="'+y+'" text-anchor="middle" font-size="10.5" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">'+data[0].dateFr+'</text>';
+    }
+
+    const ly = 18;
+    const legendSvg =
+      '<line x1="16" y1="'+ly+'" x2="40" y2="'+ly+'" stroke="'+CHART_COLORS.na+'" stroke-width="2.2" stroke-dasharray="5,4"/>'+
+      '<text x="46" y="'+(ly+4)+'" font-size="11" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">Cible</text>'+
+      '<circle cx="106" cy="'+ly+'" r="5" fill="'+CHART_COLORS.cho+'" stroke="'+CHART_COLORS.cho+'" stroke-width="2"/>'+
+      '<text x="116" y="'+(ly+4)+'" font-size="11" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">Réalisé</text>'+
+      '<circle cx="184" cy="'+ly+'" r="5" fill="'+CHART_COLORS.bg+'" stroke="'+CHART_COLORS.cho+'" stroke-width="2.2"/>'+
+      '<text x="194" y="'+(ly+4)+'" font-size="11" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">Prévision</text>';
+
+    const svg =
+      '<svg id="progressChartSvg" viewBox="0 0 '+W+' '+H+'" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="display:block;">'+
+        '<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="'+CHART_COLORS.bg+'" rx="10"/>'+
+        legendSvg+gridSvg+
+        (targetPath?'<path d="'+targetPath+'" fill="none" stroke="'+CHART_COLORS.na+'" stroke-width="2" stroke-dasharray="5,4" stroke-linecap="round"/>':'')+
+        (choPath?'<path d="'+choPath+'" fill="none" stroke="'+CHART_COLORS.cho+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>':'')+
+        pointsSvg+xLabelsSvg+
+        '<line x1="'+ML+'" y1="'+(MT+PH)+'" x2="'+(W-MR)+'" y2="'+(MT+PH)+'" stroke="'+CHART_COLORS.border+'" stroke-width="1.2"/>'+
+      '</svg>';
+
+    container.innerHTML = svg;
+
+    const withTarget = data.filter(d=>d.pct!=null);
+    const avgPct = withTarget.length ? withTarget.reduce((s,d)=>s+d.pct,0)/withTarget.length : null;
+    statsEl.innerHTML = data.length+' séance(s) suivie(s)'+(avgPct!=null?' · exécution moyenne <b style="color:var(--text)">'+fmt(avgPct,0)+'%</b>':'')+
+      (undated>0?' · '+undated+' séance(s) sans date non affichée(s)':'');
+  }
+
+  function exportSvgAsPng(svgEl, filename){
+    const serializer = new XMLSerializer();
+    const svgStr = serializer.serializeToString(svgEl);
+    const svgBlob = new Blob([svgStr], {type:'image/svg+xml;charset=utf-8'});
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = function(){
+      const scale = 2;
+      const vb = svgEl.viewBox.baseVal;
+      const w = (vb && vb.width) ? vb.width : 640;
+      const h = (vb && vb.height) ? vb.height : 340;
+      const canvas = document.createElement('canvas');
+      canvas.width = w*scale;
+      canvas.height = h*scale;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = CHART_COLORS.bg;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(function(blob){
+        if(!blob){ alert('Export impossible.'); return; }
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }, 'image/png');
+    };
+    img.onerror = function(){
+      alert('Export impossible : le navigateur a bloqué la conversion du graphique en image.');
+    };
+    img.src = url;
+  }
+
+  document.getElementById('exportChartBtn').addEventListener('click', ()=>{
+    const svgEl = document.getElementById('progressChartSvg');
+    if(!svgEl) return;
+    exportSvgAsPng(svgEl, 'suivi-ravito-graphique-'+new Date().toISOString().slice(0,10)+'.png');
+  });
+
+  // ---------------- TABS ----------------
+  function switchTab(name){
+    const btn = document.querySelector('.tab-btn[data-tab="'+name+'"]');
+    if(btn) btn.click();
+  }
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.getAttribute('data-tab');
+      document.getElementById('tab-'+tab).classList.add('active');
+      if(tab==='graphique') renderChart();
+    });
+  });
+
+  // ---------------- TYPE TOGGLE ----------------
+  document.querySelectorAll('.seg-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      state.type = btn.getAttribute('data-type');
+    });
+  });
+
+  // ---------------- FIELD LISTENERS ----------------
+  ['durH','durM','targetInput'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', updateSummary);
+  });
+
+  // ---------------- EXPORT / IMPORT ----------------
+  document.getElementById('exportBtn').addEventListener('click', ()=>{
+    const payload = {
+      exported_at: new Date().toISOString(),
+      sessions: state.sessions,
+      products: state.products,
+      settings: state.settings
+    };
+    const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ravito-nutrition-sauvegarde-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('importBtn').addEventListener('click', ()=>{
+    document.getElementById('importFile').click();
+  });
+
+  document.getElementById('importFile').addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async evt => {
+      try{
+        const data = JSON.parse(evt.target.result);
+        if(!data.sessions || !data.products) throw new Error('Format invalide');
+        const mode = confirm(
+          'Remplacer toutes les données actuelles par celles du fichier ?\n\n'+
+          'OK = Remplacer\nAnnuler = Fusionner (ajouter sans écraser)'
+        ) ? 'replace' : 'merge';
+        if(mode==='replace'){
+          state.sessions = data.sessions;
+          state.products = data.products;
+          state.settings = data.settings || state.settings;
+        } else {
+          const existingSessionIds = new Set(state.sessions.map(s=>s.id));
+          data.sessions.forEach(s=>{ if(!existingSessionIds.has(s.id)) state.sessions.push(s); });
+          const existingProductIds = new Set(state.products.map(p=>p.id));
+          data.products.forEach(p=>{ if(!existingProductIds.has(p.id)) state.products.push(p); });
+          if(data.settings && !state.settings.raceName && !state.settings.raceDate) state.settings = data.settings;
+        }
+        await persistSessions();
+        await persistProducts();
+        await persistSettings();
+        exitEditSessionMode();
+        renderBib();
+        renderNextBanner();
+        renderPlanList();
+        renderHistList();
+        renderProducts();
+        renderSolverOptions();
+        updateSummary();
+        alert('Import terminé ('+data.sessions.length+' séance(s) dans le fichier).');
+      }catch(err){
+        alert('Impossible de lire ce fichier : '+err.message);
+      }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  // ---------------- INIT ----------------
+  async function init(){
+    await loadAll();
+    renderBib();
+    renderNextBanner();
+    renderProducts();
+    renderSolverOptions();
+    renderPlanList();
+    renderHistList();
+    document.getElementById('cpCat').innerHTML = catOptionsHTML('Gels');
+
+    const today = new Date();
+    document.getElementById('sessDate').value = today.toISOString().slice(0,10);
+    updateSummary();
+  }
+  init();
+
+})();
+</script>
+</body>
+</html>
