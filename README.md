@@ -39,12 +39,10 @@ Pensé pour le **gut training** : progresser semaine après semaine sur le débi
 ## Démarrage rapide
 
 **Option 1 — en local**
-Télécharge `ravito-nutrition.html` et ouvre-le directement dans ton navigateur (double-clic). Aucune installation, aucun serveur.
+Télécharge `index.html` et ouvre-le directement dans ton navigateur (double-clic). Aucune installation, aucun serveur.
 
 **Option 2 — sur GitHub Pages**
-1. Pousse ce dépôt sur GitHub.
-2. Dans *Settings → Pages*, active GitHub Pages sur la branche principale.
-3. La page est accessible à `https://<ton-user>.github.io/<ton-repo>/ravito-nutrition.html`.
+La page est accessible à `https://maxohmlab.github.io/suivi-ravito/index.html`.
 
 Ajoute la page à l'écran d'accueil de ton téléphone (Safari/Chrome → "Ajouter à l'écran d'accueil") pour un accès rapide façon application.
 
