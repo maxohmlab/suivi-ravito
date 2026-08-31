@@ -1,10 +1,12 @@
 # Suivi Ravito
 
-Outil web (page HTML unique, sans installation) pour planifier et suivre les apports en glucides, sodium et caféine lors des sorties longues de course à pied — gels, boissons isotoniques, gommes, pastilles de sel...
+Outil web pour planifier et suivre les apports en **glucides, sodium et caféine** lors des sorties longues et des courses — gels, boissons isotoniques, gommes, pastilles de sel, etc.
 
 Pensé pour le **gut training** : progresser semaine après semaine sur le débit de glucides (g/h) toléré à l'effort, comparer systématiquement ce qui était *prévu* à ce qui a été *réellement pris*, et générer un timing de prise réaliste pour le jour de la course.
 
-> Aucune dépendance, aucun serveur : un seul fichier `.html` que tu ouvres dans un navigateur, ou héberges tel quel sur GitHub Pages.
+La version actuelle utilise **Supabase** pour l'authentification et la sauvegarde des données. L'application reste une page HTML autonome côté interface et peut être publiée sur **GitHub Pages**.
+
+> Version 2.1 : connexion utilisateur, profil personnel, bibliothèque de produits et séances sauvegardées dans Supabase.
 
 ---
 
@@ -15,7 +17,7 @@ Pensé pour le **gut training** : progresser semaine après semaine sur le débi
 - [Guide des onglets](#guide-des-onglets)
 - [Bibliothèque de produits](#bibliothèque-de-produits)
 - [Exemples de calcul](#exemples-de-calcul)
-- [Sauvegarde des données](#sauvegarde-des-données)
+- [Données et sauvegarde](#données-et-sauvegarde)
 - [Structure technique](#structure-technique)
 - [Avertissement](#avertissement)
 - [Auteur](#auteur)
@@ -31,18 +33,20 @@ Pensé pour le **gut training** : progresser semaine après semaine sur le débi
 - **Séances planifiées vs réalisées** : bascule une prévision en séance réalisée sans perdre la prévision d'origine — comparaison produit par produit générée automatiquement.
 - **Graphique de progression** : CHO/h réalisé vs cible, sur un vrai axe temporel (les dates, pas juste l'ordre des séances), exportable en PNG.
 - **Résumé Strava en un clic** : texte prêt à coller (avec emojis) résumant les apports et les produits d'une séance réalisée.
-- **Bibliothèque de produits éditable** : tous les produits (par défaut ou personnalisés) sont modifiables — nom, catégorie, glucides, sodium, caféine, remarque.
-- **Export / Import JSON** : sauvegarde complète (séances + produits + réglages), ou export/import de la seule bibliothèque de produits pour la partager/réutiliser.
+- **Bibliothèque de produits** : produits de référence partagés et produits personnalisés par utilisateur, avec nom, catégorie, unité, glucides, sodium, caféine et remarque.
+- **Compte utilisateur** : connexion par email/mot de passe et profil personnel.
+- **Sauvegarde automatique** : produits, séances et paramètres du profil sont sauvegardés dans Supabase.
+- **Export JSON** : export local des données du compte pour disposer d'une copie personnelle.
 
 ---
 
 ## Démarrage rapide
 
 **Option 1 — en local**
-Télécharge `index.html` et ouvre-le directement dans ton navigateur (double-clic). Aucune installation, aucun serveur.
+L'ancienne version sans gestion de profil et sauvegarde est toujours disponible avec le fichier `index-v1.html`. Ouvre-le directement dans ton navigateur (double-clic). Aucune installation, aucun serveur.
 
 **Option 2 — sur GitHub Pages**
-La page est accessible à `https://maxohmlab.github.io/suivi-ravito/index.html`.
+La nouvelle version v2 est accessible ici : `https://maxohmlab.github.io/suivi-ravito/index.html`.
 
 Ajoute la page à l'écran d'accueil de ton téléphone (Safari/Chrome → "Ajouter à l'écran d'accueil") pour un accès rapide façon application.
 
@@ -63,7 +67,7 @@ Liste des séances "Réalisé", triées de la plus récente à la plus ancienne.
 Courbe CHO/h réalisé vs cible, sur un axe X proportionnel aux **dates réelles** (pas un simple emplacement par séance — un écart de deux semaines entre deux sorties se voit visuellement comme deux fois plus large qu'un écart d'une semaine). Point plein = réalisé, point creux = prévision, couleur du point = même code que la jauge. Export en PNG.
 
 ### Aide
-Mode d'emploi condensé, exemple de progression "gut training" sur 12 semaines, points de vigilance produits, et boutons de sauvegarde/export complet.
+Mode d'emploi condensé, exemple de progression "gut training" sur 12 semaines et points de vigilance produits. Les données sont désormais sauvegardées automatiquement dans le compte ; l'onglet propose uniquement l'export JSON.
 
 ---
 
@@ -75,20 +79,20 @@ Mode d'emploi condensé, exemple de progression "gut training" sur 12 semaines, 
 |---|---|---|---|---|---|
 | ISO+ Decathlon (neutre) | dose (500 ml) | 33 g | 285 mg | 0 mg | Hydratation |
 | ISO+ Decathlon (menthe) | dose (500 ml) | 33 g | 372 mg | 0 mg | Hydratation |
-| Pastille de sel Decathlon | gélule | 0 g | 118 mg | 0 mg | Électrolytes |
+| Decathlon pastille de sel | gélule | 0 g | 118 mg | 0 mg | Électrolytes |
 | TA Energy gel (normal) | gel (40 ml) | 33 g | 50 mg | 0 mg | Gels |
 | TA Energy gel (salé) | gel (40 ml) | 33 g | 100 mg | 0 mg | Gels |
 | TA Energy gel (CAF) | gel (40 ml) | 33 g | 50 mg | 50 mg | Gels |
-| Energy Gel+ Decathlon | gel (46 g / 35 ml) | 30 g | 70 mg | 0 mg | Gels |
-| Gel 1:0.8 Decathlon | gel (45 ml) | 40 g | 100 mg | 0 mg | Gels |
+| Decathlon Energy Gel+ | gel (46 g / 35 ml) | 30 g | 70 mg | 0 mg | Gels |
+| Decathlon Gel 1:0.8 | gel (45 ml) | 40 g | 100 mg | 0 mg | Gels |
 | TA Energy gommes (normal) | sachet (3 gommes) | 24 g | 114 mg | 0 mg | Gommes |
 | TA Energy gommes (salé) | sachet (3 gommes) | 24 g | 228 mg | 0 mg | Gommes |
 | TA Energy gommes (CAF) | sachet (3 gommes) | 24 g | 114 mg | 50 mg | Gommes |
 | TA Energy gommes (CAF renforcée) | sachet (3 gommes) | 24 g | 114 mg | 100 mg | Gommes |
 
-Catégories disponibles pour tes produits personnalisés : **Hydratation, Électrolytes, Gels, Gommes, Barres, Compotes, Autres**. La catégorie n'est pas qu'un rangement : elle pilote directement le comportement du Plan de prise (voir plus bas).
+Catégories disponibles pour les produits personnalisés : **Hydratation, Électrolytes, Gels, Gommes, Barres, Compotes, Autres**. La catégorie n'est pas qu'un rangement : elle pilote directement le comportement du Plan de prise (voir plus bas).
 
-Tout produit — par défaut ou personnalisé — reste modifiable (✎) ou supprimable (✕), avec un bouton pour rétablir un produit par défaut si tu l'as modifié ou effacé par erreur.
+Les produits de référence sont partagés en lecture. Les produits personnels peuvent être modifiés ou supprimés par leur propriétaire.
 
 ---
 
@@ -181,29 +185,18 @@ Affiché automatiquement produit par produit dès qu'une prévision est converti
 
 ---
 
-## Sauvegarde des données
+## Données et sauvegarde
 
-Les données (séances, produits, réglages) sont stockées dans le navigateur via l'API de stockage intégrée à la page. **Cette persistance n'est pas garantie** d'une fermeture de navigateur à l'autre selon la façon dont la page est ouverte.
+La version 2.1 utilise **Supabase** pour stocker les données associées au compte utilisateur.
 
-Deux niveaux d'export/import JSON, dans l'onglet **Aide** et dans la carte **Produits de la séance** :
+- **Profil** : nom affiché, nom du plan, nom de la course et date de course.
+- **Produits** : bibliothèque de référence partagée et produits personnels.
+- **Séances** : prévisions et séances réalisées, avec leurs produits et quantités.
+- **Prévu → Réalisé** : une séance réalisée conserve le lien vers sa prévision via `linked_plan_id`.
+- **Calculs réalisés** : les valeurs CHO/h, sodium/h et caféine/h sont enregistrées pour les séances réalisées.
+- **Export JSON** : permet de conserver une copie personnelle des données du compte.
 
-| Export | Contenu | Usage |
-|---|---|---|
-| Sauvegarde complète | Séances + produits + réglages | Sauvegarde/restauration totale |
-| Bibliothèque de produits | Produits uniquement | Partager ou réutiliser ta liste de produits sur un autre appareil, sans emporter tout ton historique |
-
-À l'import, choix entre **Remplacer** (écrase tout) ou **Fusionner** (ajoute sans écraser l'existant).
-
----
-
-## Structure technique
-
-- Fichier HTML unique, CSS et JavaScript inclus (pas de build, pas de dépendance npm).
-- Polices via Google Fonts (Bebas Neue, Inter, JetBrains Mono) — fonctionne aussi sans connexion, avec un repli sur les polices système.
-- Graphique en SVG généré dynamiquement, converti en PNG côté client via `<canvas>` à l'export.
-- Aucune donnée n'est envoyée à un serveur : tout reste dans le navigateur.
-
----
+Les caractéristiques nutritionnelles restent centralisées dans la table des produits : une modification d'un produit peut donc modifier les calculs des séances qui l'utilisent.
 
 ## Avertissement
 
