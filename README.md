@@ -46,7 +46,7 @@ La version actuelle utilise **Supabase** pour l'authentification et la sauvegard
 L'ancienne version sans gestion de profil et sauvegarde est toujours disponible avec le fichier `index-v1.html`. Ouvre-le directement dans ton navigateur (double-clic). Aucune installation, aucun serveur.
 
 **Option 2 — sur GitHub Pages**
-La nouvelle version v2 est accessible ici : `https://maxohmlab.github.io/suivi-ravito/index.html`.
+La nouvelle version v2.1 est accessible ici : `https://maxohmlab.github.io/suivi-ravito/index.html`.
 
 Ajoute la page à l'écran d'accueil de ton téléphone (Safari/Chrome → "Ajouter à l'écran d'accueil") pour un accès rapide façon application.
 
