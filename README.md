@@ -6,7 +6,7 @@ Pensé pour le **gut training** : progresser semaine après semaine sur le débi
 
 La version actuelle utilise **Supabase** pour l'authentification et la sauvegarde des données. L'application reste une page HTML autonome côté interface et peut être publiée sur **GitHub Pages**.
 
-> Version 2.1 : connexion utilisateur, profil personnel, bibliothèque de produits et séances sauvegardées dans Supabase.
+> Version 2.12 : connexion utilisateur, profil personnel, bibliothèque de produits et séances sauvegardées dans Supabase.
 
 ---
 
@@ -42,11 +42,19 @@ La version actuelle utilise **Supabase** pour l'authentification et la sauvegard
 
 ## Démarrage rapide
 
-**Option 1 — en local**
-L'ancienne version sans gestion de profil et sauvegarde est toujours disponible avec le fichier `index-v1.html`. Ouvre-le directement dans ton navigateur (double-clic). Aucune installation, aucun serveur.
+### Version actuelle — v2.12
 
-**Option 2 — sur GitHub Pages**
-La nouvelle version v2.1 est accessible ici : `https://maxohmlab.github.io/suivi-ravito/index.html`.
+La version actuelle nécessite un compte utilisateur. À la première connexion, l'écran d'accueil permet de créer un compte ou de se connecter. Une fois authentifié, l'application donne accès au calculateur, aux produits, aux séances et au suivi de progression.
+
+Les données sont sauvegardées automatiquement dans le compte utilisateur via Supabase.
+
+### Ancienne version
+
+L'ancien prototype autonome, sans authentification ni sauvegarde distante, est conservé sous le fichier `index-v1.html`.
+
+### Publication
+
+La version publiée utilise `index.html` comme fichier d'entrée de la page. Elle peut être hébergée sur GitLab Pages ou GitHub Pages sans étape de build ni installation de dépendances.
 
 Ajoute la page à l'écran d'accueil de ton téléphone (Safari/Chrome → "Ajouter à l'écran d'accueil") pour un accès rapide façon application.
 
@@ -64,7 +72,7 @@ Liste de toutes les séances de type "Prévision". Le jour J : ouvre la séance 
 Liste des séances "Réalisé", triées de la plus récente à la plus ancienne. Chaque séance affiche sa jauge d'exécution, ses produits, et — si elle provient d'une conversion — son comparatif Prévu → Réalisé. Bouton **📋 Copier pour Strava** sur chaque séance.
 
 ### Graphique
-Courbe CHO/h réalisé vs cible, sur un axe X proportionnel aux **dates réelles** (pas un simple emplacement par séance — un écart de deux semaines entre deux sorties se voit visuellement comme deux fois plus large qu'un écart d'une semaine). Point plein = réalisé, point creux = prévision, couleur du point = même code que la jauge. Export en PNG.
+Courbe CHO/h avec **prévisions et séances réalisées** sur un axe X proportionnel aux **dates réelles** (pas un simple emplacement par séance — un écart de deux semaines entre deux sorties se voit visuellement comme deux fois plus large qu'un écart d'une semaine). Point plein = réalisé, point creux = prévision. La ligne de progression et la moyenne d'exécution utilisent uniquement les séances réalisées **liées à une prévision** ; les séances réalisées hors plan ne sont pas incluses dans ce suivi. Couleur du point = même code que la jauge. Export en PNG.
 
 ### Aide
 Mode d'emploi condensé, exemple de progression "gut training" sur 12 semaines et points de vigilance produits. Les données sont désormais sauvegardées automatiquement dans le compte ; l'onglet propose uniquement l'export JSON.
@@ -187,7 +195,7 @@ Affiché automatiquement produit par produit dès qu'une prévision est converti
 
 ## Données et sauvegarde
 
-La version 2.1 utilise **Supabase** pour stocker les données associées au compte utilisateur.
+La version 2.12 utilise **Supabase** pour stocker les données associées au compte utilisateur.
 
 - **Profil** : nom affiché, nom du plan, nom de la course et date de course.
 - **Produits** : bibliothèque de référence partagée et produits personnels.
@@ -197,6 +205,16 @@ La version 2.1 utilise **Supabase** pour stocker les données associées au comp
 - **Export JSON** : permet de conserver une copie personnelle des données du compte.
 
 Les caractéristiques nutritionnelles restent centralisées dans la table des produits : une modification d'un produit peut donc modifier les calculs des séances qui l'utilisent.
+
+## Version 2.12
+
+La v2.12 apporte principalement des améliorations d'interface et de suivi :
+
+- écran d'accueil dédié pour les utilisateurs non connectés ;
+- accueil affiché avant l'accès au calculateur, sans éléments de l'application laissés visibles en arrière-plan ;
+- signature **Run Un Max** intégrée à l'écran d'accueil ;
+- affichage conjoint des prévisions et des séances réalisées dans le graphique ;
+- suivi de progression calculé uniquement sur les séances réalisées liées à une prévision.
 
 ## Avertissement
 

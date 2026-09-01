@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<title>Suivi Ravito — MaxOhmLab</title>
+<title>Suivi Ravito — v2.12 MaxOhmLab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -262,10 +262,11 @@
   .footer-meta{margin-top:1px;}
 
   /* ---------- AUTH ---------- */
-  #authGate{max-width:640px;margin:0 auto 22px;}
-  .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
-  .auth-card h2{font-family:'Bebas Neue',Impact,sans-serif;font-size:22px;letter-spacing:.03em;margin:0 0 6px;}
-  .auth-card p{font-size:13px;color:var(--text-dim);line-height:1.5;margin:0 0 12px;}
+  #authGate{max-width:640px;min-height:calc(100vh - 80px);margin:0 auto;display:flex;flex-direction:column;justify-content:center;padding:20px 0;}
+  .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px 22px 22px;box-shadow:0 18px 45px -25px rgba(0,0,0,.7);}
+  .auth-card h2{font-family:'Bebas Neue',Impact,sans-serif;font-size:clamp(30px,8vw,42px);letter-spacing:.03em;margin:0 0 8px;}
+  .auth-card p{font-size:13px;color:var(--text-dim);line-height:1.55;margin:0 0 10px;}
+  .auth-intro{font-size:14px!important;color:var(--text)!important;margin-bottom:6px!important;}
   .auth-fields{display:grid;gap:9px;}
   .auth-fields input{width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:10px;font-size:14px;font-family:'Inter';}
   .auth-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
@@ -276,14 +277,22 @@
   .user-bar b{color:var(--text);}
   .prod-ref{font-size:9.5px;color:var(--text-dimmer);margin-left:5px;text-transform:uppercase;letter-spacing:.04em;}
   .auth-hidden{display:none!important;}
+  .auth-footer{text-align:center;margin:18px auto 0;padding-top:14px;border-top:1px solid var(--border);color:var(--text-dimmer);font-size:11.5px;line-height:1.8;max-width:640px;}
+  .auth-footer .footer-name{font-weight:700;color:var(--text-dim);font-size:12.5px;letter-spacing:0.02em;}
+  .auth-footer .footer-link{color:var(--cho);text-decoration:none;}
+  .auth-footer .footer-link:hover{text-decoration:underline;}
+  #appWrap.auth-hidden{display:none!important;}
+  #appWrap:not(.auth-hidden){display:block;}
 </style>
 </head>
 <body>
 
 <div id="authGate">
   <div class="auth-card">
-    <h2>Suivi Ravito</h2>
-    <p>Connecte-toi pour sauvegarder tes produits et tes séances dans ton profil.</p>
+    <h2>Bienvenue sur Suivi Ravito</h2>
+    <p class="auth-intro">Ton ravitaillement se prépare à l’entraînement.</p>
+    <p>Planifie, teste et suis tes apports en glucides, sodium et caféine lors de tes sorties longues et de tes courses.</p>
+    <p>Crée ton compte ou connecte-toi pour retrouver tes produits, tes séances et ta progression depuis n'importe quel appareil.</p>
     <div class="auth-fields">
       <input type="text" id="authName" placeholder="Nom affiché (optionnel)" autocomplete="name">
       <input type="email" id="authEmail" placeholder="Email" autocomplete="email">
@@ -295,9 +304,14 @@
     </div>
     <div class="auth-message" id="authMessage"></div>
   </div>
+  <div class="auth-footer">
+    <div class="footer-name">Run Un Max</div>
+    <a class="footer-link" href="https://substack.com/@maxohm" target="_blank" rel="noopener noreferrer">substack.com/@maxohm</a>
+    <div>© 2026 · Créé à l'aide de Claude AI</div>
+  </div>
 </div>
 
-<div class="wrap" id="appWrap">
+<div class="wrap auth-hidden" id="appWrap">
 
   <div class="user-bar">
     <span>Connecté : <b id="userEmail">—</b></span>
@@ -471,7 +485,7 @@
       <div class="actions" style="margin-top:14px;">
         <button class="btn ghost" id="exportChartBtn" style="display:none;">⬇ Exporter en PNG</button>
       </div>
-      <div class="hint" style="margin-top:10px;">Ligne pointillée = cible · point plein = séance réalisée · point creux = prévision. Couleur du point : même code que la jauge de l'onglet Séance (vert = dans la cible, orange = écart modéré, rouge = hors cible).</div>
+      <div class="hint" style="margin-top:10px;">Ligne pointillée = cible · ligne orange = progression des séances réalisées liées à une prévision · point plein = séance réalisée · point creux = prévision. Couleur du point : même code que la jauge de l'onglet Séance (vert = dans la cible, orange = écart modéré, rouge = hors cible).</div>
     </div>
   </div>
 
@@ -1046,8 +1060,82 @@
   const CHART_COLORS={bg:'#1b1f27',border:'#2e3444',textDim:'#9099ac',text:'#f3f2ed',cho:'#ff8a3d',na:'#3fc7c1',good:'#4ade80',warn:'#fbbf24',bad:'#f87171'};
   function execColor(pct){if(pct==null)return CHART_COLORS.textDim;if(pct>=95&&pct<=115)return CHART_COLORS.good;if((pct>=80&&pct<95)||(pct>115&&pct<=140))return CHART_COLORS.warn;return CHART_COLORS.bad;}
   function niceMax(v){if(v<=0)return 40;const raw=v*1.15,step=raw<=50?10:(raw<=100?20:25);return Math.ceil(raw/step)*step;}
-  function buildChartData(){return state.sessions.filter(s=>s.date).map(s=>{const hours=(s.duration_min||0)/60,choH=hours>0?s.total_cho/hours:0,pct=s.target_cho_h?choH/s.target_cho_h*100:null,ts=new Date(s.date+'T00:00:00').getTime(),dateFr=new Date(s.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});return{s,choH,target:s.target_cho_h||null,pct,label:s.week||'',dateFr,ts};}).sort((a,b)=>a.ts-b.ts);}
-  function renderChart(){const container=document.getElementById('chartContainer'),statsEl=document.getElementById('chartStats'),exportBtn=document.getElementById('exportChartBtn'),data=buildChartData(),undated=state.sessions.length-data.length;if(data.length===0){container.innerHTML='<div class="empty">Aucune séance datée pour l\'instant — ajoute une date à tes séances pour voir apparaître le graphique.</div>';statsEl.innerHTML='';exportBtn.style.display='none';return;}exportBtn.style.display='inline-block';const W=640,H=340,ML=44,MR=16,MT=36,MB=42,PW=W-ML-MR,PH=H-MT-MB,allVals=[10];data.forEach(d=>{allVals.push(d.choH);if(d.target)allVals.push(d.target);});const maxV=niceMax(Math.max.apply(null,allVals)),minTs=data[0].ts,maxTs=data[data.length-1].ts,span=maxTs-minTs,xAt=ts=>span>0?ML+PW*(ts-minTs)/span:ML+PW/2,yAt=v=>MT+PH-v/maxV*PH;let gridSvg='';for(let g=0;g<=4;g++){const v=maxV*g/4,y=yAt(v);gridSvg+='<line x1="'+ML+'" y1="'+y+'" x2="'+(W-MR)+'" y2="'+y+'" stroke="'+CHART_COLORS.border+'" stroke-width="1"/><text x="'+(ML-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="10" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">'+Math.round(v)+'</text>';}let targetPath='',seg=[];data.forEach(d=>{if(d.target!=null)seg.push(xAt(d.ts)+','+yAt(d.target));else{if(seg.length>1)targetPath+='M'+seg.join('L')+' ';seg=[];}});if(seg.length>1)targetPath+='M'+seg.join('L')+' ';const choPts=data.map(d=>xAt(d.ts)+','+yAt(d.choH)),choPath=choPts.length>1?'M'+choPts.join('L'):'';let pointsSvg='';data.forEach(d=>{const x=xAt(d.ts),y=yAt(d.choH),col=execColor(d.pct),isPlan=d.s.type==='plan',tip=(d.label?esc(d.label)+' — ':'')+esc(d.dateFr)+' : '+fmt(d.choH,1)+'g/h'+(d.target?' ('+fmt(d.pct,0)+'% de la cible '+d.target+'g/h)':'');pointsSvg+='<circle cx="'+x+'" cy="'+y+'" r="5" fill="'+(isPlan?CHART_COLORS.bg:col)+'" stroke="'+col+'" stroke-width="2.2"><title>'+tip+'</title></circle>';});let xLabelsSvg='',y=MT+PH+16;if(span>0){for(let k=0;k<=4;k++){const t=minTs+span*k/4,x=xAt(t),lbl=new Date(t).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});xLabelsSvg+='<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="10.5" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">'+lbl+'</text>';}}else xLabelsSvg+='<text x="'+xAt(minTs)+'" y="'+y+'" text-anchor="middle" font-size="10.5" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">'+data[0].dateFr+'</text>';const ly=18,legendSvg='<line x1="16" y1="'+ly+'" x2="40" y2="'+ly+'" stroke="'+CHART_COLORS.na+'" stroke-width="2.2" stroke-dasharray="5,4"/><text x="46" y="'+(ly+4)+'" font-size="11" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">Cible</text><circle cx="106" cy="'+ly+'" r="5" fill="'+CHART_COLORS.cho+'" stroke="'+CHART_COLORS.cho+'" stroke-width="2"/><text x="116" y="'+(ly+4)+'" font-size="11" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">Réalisé</text><circle cx="184" cy="'+ly+'" r="5" fill="'+CHART_COLORS.bg+'" stroke="'+CHART_COLORS.cho+'" stroke-width="2.2"/><text x="194" y="'+(ly+4)+'" font-size="11" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">Prévision</text>';const svg='<svg id="progressChartSvg" viewBox="0 0 '+W+' '+H+'" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="display:block;"><rect x="0" y="0" width="'+W+'" height="'+H+'" fill="'+CHART_COLORS.bg+'" rx="10"/>'+legendSvg+gridSvg+(targetPath?'<path d="'+targetPath+'" fill="none" stroke="'+CHART_COLORS.na+'" stroke-width="2" stroke-dasharray="5,4" stroke-linecap="round"/>':'')+(choPath?'<path d="'+choPath+'" fill="none" stroke="'+CHART_COLORS.cho+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>':'')+pointsSvg+xLabelsSvg+'<line x1="'+ML+'" y1="'+(MT+PH)+'" x2="'+(W-MR)+'" y2="'+(MT+PH)+'" stroke="'+CHART_COLORS.border+'" stroke-width="1.2"/></svg>';container.innerHTML=svg;const withTarget=data.filter(d=>d.pct!=null),avgPct=withTarget.length?withTarget.reduce((s,d)=>s+d.pct,0)/withTarget.length:null;statsEl.innerHTML=data.length+' séance(s) suivie(s)'+(avgPct!=null?' · exécution moyenne <b style="color:var(--text)">'+fmt(avgPct,0)+'%</b>':'')+(undated>0?' · '+undated+' séance(s) sans date non affichée(s)':'');}
+  function buildChartData(){
+    const plans=state.sessions.filter(s=>s.type==='plan'&&s.date);
+    const planIds=new Set(state.sessions.filter(s=>s.type==='plan').map(s=>s.id));
+    const linkedRealises=state.sessions.filter(s=>s.type==='realise'&&s.date&&s.linkedPlanId&&planIds.has(s.linkedPlanId));
+    const data=state.sessions.filter(s=>s.date).map(s=>{
+      const hours=(s.duration_min||0)/60;
+      const choH=hours>0?s.total_cho/hours:0;
+      const pct=s.target_cho_h?choH/s.target_cho_h*100:null;
+      const ts=new Date(s.date+'T00:00:00').getTime();
+      const dateFr=new Date(s.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+      const isLinkedRealise=s.type==='realise'&&s.linkedPlanId&&planIds.has(s.linkedPlanId);
+      return {s,choH,target:s.target_cho_h||null,pct,label:s.week||'',dateFr,ts,isLinkedRealise};
+    }).sort((a,b)=>a.ts-b.ts || (a.s.type==='plan'? -1 : 1));
+    return {data,plannedCount:plans.length,linkedRealisedCount:linkedRealises.length};
+  }
+
+  function renderChart(){
+    const container=document.getElementById('chartContainer'),statsEl=document.getElementById('chartStats'),exportBtn=document.getElementById('exportChartBtn');
+    const chart=buildChartData(),data=chart.data;
+    const undated=state.sessions.length-data.length;
+    if(data.length===0){container.innerHTML='<div class="empty">Aucune séance datée pour l\'instant — ajoute une date à tes séances pour voir apparaître le graphique.</div>';statsEl.innerHTML='';exportBtn.style.display='none';return;}
+    exportBtn.style.display='inline-block';
+    const W=640,H=340,ML=44,MR=16,MT=36,MB=42,PW=W-ML-MR,PH=H-MT-MB;
+    const allVals=[10];
+    data.forEach(d=>{allVals.push(d.choH);if(d.target)allVals.push(d.target);});
+    const maxV=niceMax(Math.max.apply(null,allVals));
+    const minTs=data[0].ts,maxTs=data[data.length-1].ts,span=maxTs-minTs;
+    const xAt=ts=>span>0?ML+PW*(ts-minTs)/span:ML+PW/2;
+    const yAt=v=>MT+PH-v/maxV*PH;
+    let gridSvg='';
+    for(let g=0;g<=4;g++){
+      const v=maxV*g/4,y=yAt(v);
+      gridSvg+='<line x1="'+ML+'" y1="'+y+'" x2="'+(W-MR)+'" y2="'+y+'" stroke="'+CHART_COLORS.border+'" stroke-width="1"/><text x="'+(ML-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="10" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">'+Math.round(v)+'</text>';
+    }
+    let targetPath='',seg=[];
+    data.forEach(d=>{
+      if(d.target!=null)seg.push(xAt(d.ts)+','+yAt(d.target));
+      else if(seg.length>1){targetPath+='M'+seg.join('L')+' ';seg=[];}
+    });
+    if(seg.length>1)targetPath+='M'+seg.join('L')+' ';
+
+    // Ligne de progression : uniquement les séances réalisées et liées à une prévision.
+    const realisedData=data.filter(d=>d.isLinkedRealise);
+    const choPts=realisedData.map(d=>xAt(d.ts)+','+yAt(d.choH));
+    const choPath=choPts.length>1?'M'+choPts.join('L'):'';
+
+    // Les prévisions sont creuses ; les réalisées sont pleines. Les réalisées sont
+    // dessinées après les prévisions afin de rester visibles si les dates coïncident.
+    let pointsSvg='';
+    const orderedPoints=data.slice().sort((a,b)=>{
+      if(a.s.type!==b.s.type) return a.s.type==='plan'?-1:1;
+      return a.ts-b.ts;
+    });
+    orderedPoints.forEach(d=>{
+      const x=xAt(d.ts),y=yAt(d.choH),col=execColor(d.pct),isPlan=d.s.type==='plan';
+      const tip=(d.label?esc(d.label)+' — ':'')+esc(d.dateFr)+' : '+fmt(d.choH,1)+'g/h'+(d.target?' ('+fmt(d.pct,0)+'% de la cible '+d.target+'g/h)':'');
+      pointsSvg+='<circle cx="'+x+'" cy="'+y+'" r="5" fill="'+(isPlan?CHART_COLORS.bg:col)+'" stroke="'+col+'" stroke-width="2.2"><title>'+tip+'</title></circle>';
+    });
+    let xLabelsSvg='',y=MT+PH+16;
+    if(span>0){
+      for(let k=0;k<=4;k++){
+        const t=minTs+span*k/4,x=xAt(t),lbl=new Date(t).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+        xLabelsSvg+='<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="10.5" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">'+lbl+'</text>';
+      }
+    }else xLabelsSvg+='<text x="'+xAt(minTs)+'" y="'+y+'" text-anchor="middle" font-size="10.5" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">'+data[0].dateFr+'</text>';
+    const ly=18;
+    const legendSvg='<line x1="16" y1="'+ly+'" x2="40" y2="'+ly+'" stroke="'+CHART_COLORS.na+'" stroke-width="2.2" stroke-dasharray="5,4"/><text x="46" y="'+(ly+4)+'" font-size="11" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">Cible</text><circle cx="106" cy="'+ly+'" r="5" fill="'+CHART_COLORS.cho+'" stroke="'+CHART_COLORS.cho+'" stroke-width="2"/><text x="116" y="'+(ly+4)+'" font-size="11" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">Réalisé</text><circle cx="184" cy="'+ly+'" r="5" fill="'+CHART_COLORS.bg+'" stroke="'+CHART_COLORS.cho+'" stroke-width="2.2"/><text x="194" y="'+(ly+4)+'" font-size="11" font-family="Arial, sans-serif" fill="'+CHART_COLORS.textDim+'">Prévision</text>';
+    const svg='<svg id="progressChartSvg" viewBox="0 0 '+W+' '+H+'" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="display:block;"><rect x="0" y="0" width="'+W+'" height="'+H+'" fill="'+CHART_COLORS.bg+'" rx="10"/>'+legendSvg+gridSvg+(targetPath?'<path d="'+targetPath+'" fill="none" stroke="'+CHART_COLORS.na+'" stroke-width="2" stroke-dasharray="5,4" stroke-linecap="round"/>':'')+(choPath?'<path d="'+choPath+'" fill="none" stroke="'+CHART_COLORS.cho+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>':'')+pointsSvg+xLabelsSvg+'<line x1="'+ML+'" y1="'+(MT+PH)+'" x2="'+(W-MR)+'" y2="'+(MT+PH)+'" stroke="'+CHART_COLORS.border+'" stroke-width="1.2"/></svg>';
+    container.innerHTML=svg;
+
+    const linkedRealisedWithTarget=realisedData.filter(d=>d.pct!=null);
+    const avgPct=linkedRealisedWithTarget.length?linkedRealisedWithTarget.reduce((sum,d)=>sum+d.pct,0)/linkedRealisedWithTarget.length:null;
+    const plannedLabel=chart.plannedCount===1?'1 séance planifiée':chart.plannedCount+' séances planifiées';
+    const realisedLabel=chart.linkedRealisedCount===1?'1 réalisée':chart.linkedRealisedCount+' réalisées';
+    statsEl.innerHTML=plannedLabel+' · suivi sur <b style="color:var(--text)">'+realisedLabel+'</b>'+(avgPct!=null?' · exécution moyenne <b style="color:var(--text)">'+fmt(avgPct,0)+'%</b>':'')+(undated>0?' · '+undated+' séance(s) sans date non affichée(s)':'');
+  }
   function exportSvgAsPng(svgEl,filename){const serializer=new XMLSerializer(),svgStr=serializer.serializeToString(svgEl),svgBlob=new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'}),url=URL.createObjectURL(svgBlob),img=new Image();img.onload=function(){const scale=2,vb=svgEl.viewBox.baseVal,w=(vb&&vb.width)?vb.width:640,h=(vb&&vb.height)?vb.height:340,canvas=document.createElement('canvas');canvas.width=w*scale;canvas.height=h*scale;const ctx=canvas.getContext('2d');ctx.fillStyle=CHART_COLORS.bg;ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);canvas.toBlob(function(blob){if(!blob){alert('Export impossible.');return;}const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);},'image/png');};img.onerror=function(){alert('Export impossible : le navigateur a bloqué la conversion du graphique en image.');};img.src=url;}
   document.getElementById('exportChartBtn').addEventListener('click',()=>{const svgEl=document.getElementById('progressChartSvg');if(!svgEl)return;exportSvgAsPng(svgEl,'suivi-ravito-graphique-'+new Date().toISOString().slice(0,10)+'.png');});
 
@@ -1085,4 +1173,5 @@
 })();
 </script>
 </body>
+<!-- Suivi Ravito v2.11 -->
 </html>
