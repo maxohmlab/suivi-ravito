@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <!-- v2.12.1 bug fix: planned session quantities now save the edited values. -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<title>Suivi Ravito — v2.12 MaxOhmLab</title>
+<title>Suivi Ravito — v2.12.1 MaxOhmLab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -678,7 +679,7 @@
     if(!email||!password){ setAuthMessage('Email et mot de passe requis.',true); return; }
     if(password.length<6){ setAuthMessage('Le mot de passe doit contenir au moins 6 caractères.',true); return; }
     setAuthMessage('Création du compte...');
-    const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{display_name:name},emailRedirectTo: window.location.origin + window.location.pathname}});
+    const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{display_name:name}}});
     if(error){ console.error(error); setAuthMessage(error.message,true); return; }
     if(data.session){
       await onSignedIn(data.user);
@@ -849,9 +850,15 @@
     if(delError) throw delError;
     const rows=items.map(it=>{
       const plan=planItems.find(x=>x.id===it.id);
+      // When editing a planned session, the current quantity in the form
+      // must become the new planned quantity. For a realised session,
+      // preserve the original planned quantity for the comparison.
+      const plannedQty=state.type==='plan'
+        ? Number(it.qty ?? it.plannedQty ?? 0)
+        : Number(plan ? (plan.plannedQty ?? plan.qty) : (it.plannedQty ?? it.qty ?? 0));
       return {
         session_id:sessionId, product_id:it.id,
-        planned_quantity:Number(plan ? (plan.plannedQty ?? plan.qty) : (it.plannedQty ?? it.qty ?? 0))||0,
+        planned_quantity:plannedQty||0,
         actual_quantity:it.actualQty==null ? (state.type==='realise' ? Number(it.qty)||0 : null) : Number(it.actualQty)
       };
     });
