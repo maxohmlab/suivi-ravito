@@ -7,6 +7,7 @@ Pensé pour le **gut training** : progresser semaine après semaine sur le débi
 La version actuelle utilise **Supabase** pour l'authentification et la sauvegarde des données. L'application reste une page HTML autonome côté interface et peut être publiée sur **GitHub Pages**.
 
 > Version 2.12 : connexion utilisateur, profil personnel, bibliothèque de produits et séances sauvegardées dans Supabase.
+> Version 2.12.1 : résolution de bug (modification des produits pour une séance planifiée).
 
 ---
 
