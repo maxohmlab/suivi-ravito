@@ -1,65 +1,51 @@
 # TODO — Suivi Ravito
 
-## V3 — Fonctionnalités prévues
+Les éléments ci-dessous sont des pistes pour V3 et les versions suivantes. Leur priorité pourra évoluer selon les retours utilisateurs.
 
-### Priorité 1 — Objectif sodium personnalisé
+## V3 — Fonctionnalités envisagées
+
+### Objectif sodium personnalisé
 - [ ] Ajouter un objectif de sodium/h personnalisé.
 - [ ] Permettre de définir cet objectif à partir du profil de sudation.
-- [ ] Prendre en compte la température prévue / les conditions de course.
-- [ ] Afficher clairement l'objectif sodium/h dans le plan.
+- [ ] Prendre en compte la température prévue et les conditions de course.
 - [ ] Comparer le sodium réellement consommé à l'objectif.
 
-### Priorité 2 — Bibliothèque de produits publics
+### Bibliothèque de produits publics
 - [ ] Permettre aux utilisateurs de partager certains produits.
 - [ ] Créer une bibliothèque publique de produits.
-- [ ] Distinguer clairement produits personnels et publics.
+- [ ] Distinguer les produits personnels des produits publics.
 - [ ] Prévoir validation/modération et gestion des doublons.
-- [ ] Permettre à chaque utilisateur de conserver ses produits personnels.
 
-### Priorité 3 — Analyse planifié vs réalisé
+### Analyse planifié vs réalisé
 - [ ] Étendre l'analyse aux glucides, sodium et caféine.
 - [ ] Afficher les écarts entre objectif et consommation réelle.
 - [ ] Conserver la logique : **Planifier → Exécuter → Comparer → Ajuster**.
 
-### Profil de course
-- [ ] Ajouter un profil de course plus complet.
-- [ ] Renseigner les caractéristiques utiles à la stratégie nutritionnelle.
-- [ ] Utiliser ces informations pour contextualiser les objectifs.
+### Profil de course et progression
+- [ ] Étudier un profil de course plus complet.
+- [ ] Améliorer les indicateurs de progression et de régularité.
+- [ ] Garder une interface simple et utile.
 
-### Progression / suivi
-- [ ] Améliorer les indicateurs de progression.
-- [ ] Mettre en évidence la régularité d'exécution.
-- [ ] Conserver le graphique planifié/réalisé actuel comme base.
+### Météo et conditions
+- [ ] Évaluer l'intérêt d'une intégration météo, notamment pour contextualiser l'objectif sodium.
+- [ ] Privilégier des recommandations compréhensibles et éviter les calculs opaques.
 
-### Météo / conditions
-- [ ] Étudier une intégration météo pour adapter notamment le sodium.
-- [ ] Privilégier une recommandation simple et compréhensible.
-- [ ] Ne pas rendre l'intégration obligatoire si elle complexifie l'outil.
-
-### Ravitos de course / apports complémentaires
-- [ ] Envisager une note qualitative pour les aliments pris en complément.
-- [ ] Exemple : « quelques morceaux de pastèque au ravitaillement ».
+### Apports complémentaires aux ravitaillements
+- [ ] Envisager une note qualitative pour les aliments pris en complément (ex. quelques morceaux de pastèque).
 - [ ] Ne pas obliger à quantifier précisément les apports inconnus.
-- [ ] Ne pas intégrer automatiquement ces apports approximatifs dans le CHO/h.
-- [ ] Distinguer produits planifiés/suivis et apports complémentaires.
+- [ ] Ne pas intégrer automatiquement des estimations imprécises dans le calcul CHO/h.
 
 ### Partage / visibilité
-- [ ] Ajouter le lien Suivi Ravito dans « Copier pour Strava ».
-- [ ] Utiliser une URL en clair.
-- [ ] Exemple : `🔗 Planifié avec Suivi Ravito : https://maxohmlab.github.io/suivi-ravito/`
+- [ ] Ajouter le lien Suivi Ravito au résumé « Copier pour Strava ».
 
 ## Principes à conserver
-- [ ] Garder l'outil simple et rapide.
-- [ ] Ne pas transformer Suivi Ravito en outil de comptabilité alimentaire exhaustive.
-- [ ] Prioriser les données utiles à la préparation et à l'exécution.
-- [ ] Ne pas forcer la quantification des aliments pris aux ravitaillements.
-- [ ] Conserver les caractéristiques des produits dans leur fiche, sans snapshot historique.
-- [ ] Conserver la logique planifié → réalisé.
-- [ ] Éviter les fonctionnalités sociales ou prédictives trop complexes.
+- Garder l'outil simple et rapide.
+- Ne pas transformer Suivi Ravito en outil de comptabilité alimentaire exhaustive.
+- Prioriser les données utiles à la préparation et à l'exécution.
+- Conserver la logique planifié → réalisé et les analyses d'exécution.
+- Éviter les fonctionnalités sociales ou prédictives trop complexes sans bénéfice démontré.
 
 ## À évaluer avant développement
-- [ ] Prioriser les fonctionnalités selon les premiers retours utilisateurs.
-- [ ] Évaluer la valeur réelle de l'intégration météo.
-- [ ] Définir le modèle de données de la bibliothèque publique.
-- [ ] Définir les règles de validation/modération.
-- [ ] Définir le contenu d'un éventuel profil de course.
+- [ ] Prioriser les fonctionnalités selon les retours utilisateurs.
+- [ ] Définir le modèle de données et les règles de validation pour les produits publics.
+- [ ] Déterminer le périmètre réaliste de V3.

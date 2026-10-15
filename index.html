@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <!-- v2.12.1 bug fix: planned session quantities now save the edited values. -->
+  <!-- Suivi Ravito V2.13 — multi-plans, archives consultables en lecture seule. Base : V2.12.1. -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<title>Suivi Ravito — v2.12.1 MaxOhmLab</title>
+<title>Suivi Ravito — v2.13 MaxOhmLab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -234,6 +234,12 @@
   .help-steps{margin:0;padding-left:20px;font-size:13px;color:var(--text-dim);line-height:1.7;}
   .help-steps li{margin-bottom:4px;}
   .help-steps b{color:var(--text);}
+  .plan-mode-banner{display:none;margin-top:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:12px;line-height:1.5;}
+  .plan-mode-banner.archived{display:block;background:rgba(232,165,66,0.10);border-color:rgba(232,165,66,0.35);}
+  .plan-mode-banner.active{display:block;background:rgba(63,199,193,0.08);border-color:rgba(63,199,193,0.28);}
+  .plan-manager-actions{display:flex;gap:8px;align-items:end;flex-wrap:wrap;}
+  #planSelector optgroup{font-weight:700;}
+  .archived-view .seg-btn:disabled,.archived-view input:disabled,.archived-view textarea:disabled,.archived-view select:disabled{opacity:.65;cursor:not-allowed;}
 
   .empty{color:var(--text-dimmer);font-size:13px;text-align:center;padding:20px 0;}
 
@@ -308,7 +314,7 @@
   <div class="auth-footer">
     <div class="footer-name">Run Un Max</div>
     <a class="footer-link" href="https://substack.com/@maxohm" target="_blank" rel="noopener noreferrer">substack.com/@maxohm</a>
-    <div>© 2026 · Créé à l'aide de Claude AI</div>
+    <div>© 2026 · Créé à l'aide de l'IA</div>
   </div>
 </div>
 
@@ -335,6 +341,19 @@
         <button type="button" class="bib-cancel" id="bibCancelBtn">Annuler</button>
       </div>
     </div>
+  </div>
+
+  <div class="card" id="planManagerCard" style="margin-top:14px;">
+    <h2>Mes plans <span class="n">CYCLES</span></h2>
+    <div class="field-row" style="align-items:end;">
+      <div class="field" style="flex:1;min-width:220px;">
+        <label for="planSelector">Plan consulté</label>
+        <select id="planSelector" aria-describedby="planStatusNote"></select>
+      </div>
+      <button class="btn" id="newPlanBtn" type="button">Clôturer et créer un plan</button>
+    </div>
+    <div id="planStatusNote" class="muted" style="font-size:12px;margin-top:8px;"></div>
+    <div id="planModeBanner" class="plan-mode-banner" role="status" aria-live="polite"></div>
   </div>
 
   <div class="next-banner" id="nextBanner"></div>
@@ -496,11 +515,13 @@
     <div class="card">
       <h2>Comment utiliser cet outil</h2>
       <ol class="help-steps">
-        <li><b>Planifie</b> une séance dans l'onglet Séance (type "Prévision") : semaine, date, durée, cible CHO/h, produits envisagés. Enregistre — elle apparaît dans "Planifiées".</li>
-        <li><b>Le jour J</b>, rouvre-la via "Modifier" dans l'onglet Planifiées, ajuste les quantités réellement prises, passe le type sur "Réalisé", enregistre — elle bascule dans "Historique".</li>
-        <li><b>Le calculateur rapide</b> te dit combien d'un produit il faut pour couvrir ta cible sur la durée prévue, et à quel rythme le prendre.</li>
-        <li><b>Édite librement</b> les produits de la bibliothèque (✎) si tu changes de marque ou si une valeur d'étiquette diffère — Les produits de référence sont partagés et en lecture seule ; tes produits personnels restent modifiables.</li>
-        <li><b>Les données sont sauvegardées automatiquement</b> dans ton compte Supabase. Tu peux exporter un fichier JSON comme sauvegarde personnelle.</li>
+        <li><b>Choisis ton cycle</b> dans le sélecteur « Mes plans ». Un seul plan est actif à la fois ; les plans terminés restent disponibles dans la liste avec la mention « archivé ».</li>
+        <li><b>Crée un plan</b> avec « Clôturer et créer un plan » lorsque tu termines une préparation. Le plan actuel est archivé et un nouveau plan actif est créé. Les séances précédentes sont conservées et ne sont pas transférées au nouveau cycle.</li>
+        <li><b>Consulte un plan archivé</b> en le sélectionnant dans la liste. Ses séances planifiées, son historique, ses comparaisons et son graphique restent consultables. Le formulaire de séance passe en lecture seule pour éviter toute modification accidentelle. Sélectionne le plan actif pour reprendre la planification.</li>
+        <li><b>Planifie une séance</b> dans l'onglet Séance (type « Prévision ») : semaine, date, durée, cible CHO/h et produits envisagés. Enregistre — elle apparaît dans « Planifiées ».</li>
+        <li><b>Le jour J</b>, ouvre la prévision via « Modifier » dans l'onglet Planifiées, ajuste les quantités réellement prises, passe le type sur « Réalisé » et enregistre. La prévision d'origine est conservée pour la comparaison.</li>
+        <li><b>La bibliothèque de produits est commune</b> à tes cycles. Les caractéristiques nutritionnelles sont celles de la fiche produit actuelle ; les séances historiques ne conservent pas de copie indépendante de ces valeurs.</li>
+        <li><b>Les données sont sauvegardées</b> automatiquement dans ton compte Supabase. Tu peux exporter un fichier JSON comme sauvegarde personnelle.</li>
       </ol>
     </div>
 
@@ -553,7 +574,7 @@
   <div class="footer">
     <div class="footer-name">Run Un Max</div>
     <a class="footer-link" href="https://substack.com/@maxohm" target="_blank" rel="noopener noreferrer">substack.com/@maxohm</a>
-    <div class="footer-meta">© 2026 · Créé à l'aide de Claude AI</div>
+    <div class="footer-meta">© 2026 · Créé à l'aide de l'IA</div>
   </div>
 
 </div>
@@ -621,7 +642,7 @@
 
   // ---------------- STATE ----------------
   let state={
-    sessions:[], products:[], settings:{planName:'',raceName:'',raceDate:''}, quantities:{},
+    sessions:[], products:[], plans:[], activePlan:null, selectedPlanId:null, settings:{planName:'',raceName:'',raceDate:''}, quantities:{},
     type:'plan', editingId:null, editingSessionId:null, editingSessionOriginalType:null,
     user:null, profile:null
   };
@@ -644,15 +665,114 @@
   }
 
   async function persistSettings(){
+    if(!isSelectedPlanActive())throw new Error('Un plan archivé ne peut pas être modifié. Sélectionne le plan actif.');
+    if(state.selectedPlanId){
+      const {data:updated,error:updateError}=await supabaseClient.from('plans').update({name:state.settings.planName||'Plan sans nom',race_name:state.settings.raceName||null,race_date:state.settings.raceDate||null}).eq('id',state.selectedPlanId).eq('user_id',state.user.id).select().single();
+      if(updateError) throw updateError;
+      state.plans=state.plans.map(p=>p.id===updated.id?updated:p);
+      if(updated.status==='active')state.activePlan=updated;
+    }
     const {data,error}=await supabaseClient.from('profiles').upsert({
       id:state.user.id,
       display_name:state.profile?.display_name || state.user.user_metadata?.display_name || '',
-      plan_name:state.settings.planName||null,
-      race_name:state.settings.raceName||null,
-      race_date:state.settings.raceDate||null
+      plan_name:state.settings.planName||null, race_name:state.settings.raceName||null, race_date:state.settings.raceDate||null
     },{onConflict:'id'}).select('id,display_name,plan_name,race_name,race_date,created_at').single();
+    if(error) throw error; state.profile=data; renderPlanManager();
+  }
+
+  // ---------------- PLANS ----------------
+  async function loadPlansFromSupabase(){
+    const {data,error}=await supabaseClient.from('plans').select('id,user_id,name,race_name,race_date,status,created_at,archived_at').eq('user_id',state.user.id).order('created_at',{ascending:false});
     if(error) throw error;
-    state.profile=data;
+    state.plans=data||[];
+    let active=state.plans.find(p=>p.status==='active');
+    if(!active){
+      const legacy=state.profile||{};
+      const {data:created,error:createError}=await supabaseClient.from('plans').insert({user_id:state.user.id,name:legacy.plan_name||legacy.race_name||'Mon premier plan',race_name:legacy.race_name||null,race_date:legacy.race_date||null,status:'active'}).select().single();
+      if(createError) throw createError;
+      active=created; state.plans.unshift(created);
+    }
+    state.activePlan=active;
+    state.selectedPlanId=active.id;
+    // Backfill legacy sessions that have not yet been assigned to a plan.
+    const {error:backfillError}=await supabaseClient.from('sessions').update({plan_id:active.id}).eq('user_id',state.user.id).is('plan_id',null);
+    if(backfillError) throw backfillError;
+    applySelectedPlanSettings();
+    renderPlanManager();
+  }
+  function applySelectedPlanSettings(){
+    const selected=state.plans.find(p=>p.id===state.selectedPlanId)||state.activePlan;
+    if(!selected)return;
+    state.settings={planName:selected.name||'',raceName:selected.race_name||'',raceDate:selected.race_date||''};
+  }
+  function isSelectedPlanActive(){return !!state.activePlan&&state.selectedPlanId===state.activePlan.id;}
+  function renderPlanManager(){
+    const sel=document.getElementById('planSelector'); if(!sel)return;
+    const active=state.plans.filter(p=>p.status==='active');
+    const archived=state.plans.filter(p=>p.status!=='active');
+    const option=p=>'<option value="'+p.id+'"'+(p.id===state.selectedPlanId?' selected':'')+'>'+esc(p.name||p.race_name||'Plan sans nom')+'</option>';
+    sel.innerHTML=(active.length?'<optgroup label="Plan actif">'+active.map(option).join('')+'</optgroup>':'')+(archived.length?'<optgroup label="Plans archivés">'+archived.map(option).join('')+'</optgroup>':'');
+    const isActive=isSelectedPlanActive();
+    document.getElementById('newPlanBtn').disabled=!isActive;
+    document.getElementById('bibEditBtn').disabled=!isActive;
+    document.getElementById('planStatusNote').textContent=isActive
+      ?'Plan actif : tu peux planifier, modifier et enregistrer des séances.'
+      :'Plan archivé : toutes les séances et statistiques restent consultables, mais le plan est en lecture seule.';
+    const banner=document.getElementById('planModeBanner');
+    banner.className='plan-mode-banner '+(isActive?'active':'archived');
+    banner.textContent=isActive
+      ?'Cycle actif — les nouvelles séances seront enregistrées dans ce plan.'
+      :'Consultation d’un plan archivé — les séances, comparaisons et le graphique sont conservés. Pour ajouter ou modifier une séance, sélectionne le plan actif.';
+    document.getElementById('appWrap').classList.toggle('archived-view',!isActive);
+    document.getElementById('saveBtn').disabled=!isActive;
+    // Prevent stale edit modes or open plan settings from remaining editable after switching to an archive.
+    if(!isActive){
+      if(state.editingSessionId)exitEditSessionMode();
+      document.getElementById('bibDisplay').style.display='block';
+      document.getElementById('bibEditForm').style.display='none';
+    }
+    applySessionEditability();
+  }
+  function applySessionEditability(){
+    const canEdit=isSelectedPlanActive();
+    ['sessWeek','sessDate','durH','durM','targetInput','sessNotes','solverProduct','solverBtn','resetBtn','cancelEditBtn'].forEach(id=>{
+      const el=document.getElementById(id); if(el)el.disabled=!canEdit;
+    });
+    document.querySelectorAll('.seg-btn').forEach(el=>el.disabled=!canEdit);
+    document.querySelectorAll('.qty-input,[data-act="inc"],[data-act="dec"]').forEach(el=>el.disabled=!canEdit);
+    document.getElementById('saveBtn').disabled=!canEdit;
+  }
+  async function selectPlan(planId){
+    if(!state.plans.some(p=>p.id===planId))throw new Error('Plan introuvable.');
+    exitEditSessionMode();
+    state.selectedPlanId=planId;
+    applySelectedPlanSettings();
+    resetForm();
+    await loadSessionsFromSupabase();
+    renderPlanManager(); renderBib(); renderNextBanner(); renderProducts(); renderSolverOptions(); renderPlanList(); renderHistList(); renderChart(); updateSummary();
+  }
+  async function createNextPlan(){
+    if(!state.activePlan||state.selectedPlanId!==state.activePlan.id){alert('Sélectionne d’abord le plan actif.');return;}
+    const name=prompt('Nom du nouveau plan (ex. Préparation 100 km de Bienne 2027) :');
+    if(!name||!name.trim())return;
+    const raceName=prompt('Course cible (facultatif) :','')||'';
+    const raceDate=prompt('Date de la course cible (AAAA-MM-JJ, facultatif) :','')||'';
+    if(raceDate&&!/^\d{4}-\d{2}-\d{2}$/.test(raceDate)){alert('Format de date invalide. Utilise AAAA-MM-JJ.');return;}
+    if(!confirm('Le plan « '+name.trim()+' » sera créé et le plan actuel sera archivé. Les séances existantes seront conservées. Continuer ?'))return;
+    try{
+      const {data:draft,error:draftError}=await supabaseClient.from('plans').insert({user_id:state.user.id,name:name.trim(),race_name:raceName.trim()||null,race_date:raceDate||null,status:'archived'}).select().single();
+      if(draftError)throw draftError;
+      const {error:archiveError}=await supabaseClient.from('plans').update({status:'archived',archived_at:new Date().toISOString()}).eq('id',state.activePlan.id).eq('user_id',state.user.id);
+      if(archiveError)throw archiveError;
+      const {data:newActive,error:activateError}=await supabaseClient.from('plans').update({status:'active',archived_at:null}).eq('id',draft.id).eq('user_id',state.user.id).select().single();
+      if(activateError)throw activateError;
+      state.plans=state.plans.map(p=>p.id===state.activePlan.id?Object.assign({},p,{status:'archived',archived_at:new Date().toISOString()}):p);
+      state.plans=state.plans.map(p=>p.id===draft.id?newActive:p);
+      state.activePlan=newActive; state.selectedPlanId=newActive.id; applySelectedPlanSettings();
+      await persistSettings();
+      await loadSessionsFromSupabase(); renderPlanManager(); renderBib(); renderNextBanner(); renderPlanList(); renderHistList(); renderChart(); resetForm();
+      alert('Nouveau plan créé. Le précédent est archivé et ses séances sont conservées.');
+    }catch(err){console.error(err);alert('Impossible de créer le nouveau plan : '+err.message+'\nVérifie l’état des plans dans Supabase avant de réessayer.');}
   }
 
   // ---------------- AUTH ----------------
@@ -679,7 +799,7 @@
     if(!email||!password){ setAuthMessage('Email et mot de passe requis.',true); return; }
     if(password.length<6){ setAuthMessage('Le mot de passe doit contenir au moins 6 caractères.',true); return; }
     setAuthMessage('Création du compte...');
-    const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{display_name:name}}});
+    const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{display_name:name},emailRedirectTo:window.location.origin+window.location.pathname}});
     if(error){ console.error(error); setAuthMessage(error.message,true); return; }
     if(data.session){
       await onSignedIn(data.user);
@@ -705,6 +825,7 @@
     document.getElementById('userEmail').textContent=user.email||'Utilisateur';
     try{
       await loadProfileFromSupabase();
+      await loadPlansFromSupabase();
       await loadProductsFromSupabase();
       await loadSessionsFromSupabase();
       await syncAllActualMetrics();
@@ -781,7 +902,7 @@
       const q=it.qty; a.cho+=q*it.cho; a.na+=q*it.na; a.caf+=q*it.caf; return a;
     },{cho:0,na:0,caf:0});
     return {
-      id:row.id, week:row.week||null, date:row.session_date, type:row.type,
+      id:row.id, planId:row.plan_id||null, week:row.week||null, date:row.session_date, type:row.type,
       duration_min:row.duration_minutes, target_cho_h:row.target_cho_per_hour,
       total_cho:calc.cho, total_na:calc.na, total_caf:calc.caf,
       items:mappedItems, notes:row.notes||'', linkedPlanId:row.linked_plan_id||null,
@@ -792,8 +913,8 @@
   async function loadSessionsFromSupabase(){
     const {data,error}=await supabaseClient
       .from('sessions')
-      .select('id,user_id,session_date,duration_minutes,target_cho_per_hour,actual_cho_per_hour,target_sodium_per_hour,actual_sodium_per_hour,target_caffeine_per_hour,actual_caffeine_per_hour,status,created_at,week,type,linked_plan_id,notes,session_products(id,product_id,planned_quantity,actual_quantity,products(id,name,category,unit,cho_grams,sodium_mg,caffeine_mg,notes,user_id))')
-      .order('session_date',{ascending:true});
+      .select('id,user_id,plan_id,session_date,duration_minutes,target_cho_per_hour,actual_cho_per_hour,target_sodium_per_hour,actual_sodium_per_hour,target_caffeine_per_hour,actual_caffeine_per_hour,status,created_at,week,type,linked_plan_id,notes,session_products(id,product_id,planned_quantity,actual_quantity,products(id,name,category,unit,cho_grams,sodium_mg,caffeine_mg,notes,user_id))')
+      .eq('plan_id',state.selectedPlanId).order('session_date',{ascending:true});
     if(error) throw error;
     state.sessions=(data||[]).map(r=>sessionFromDb(r,r.session_products||[]));
   }
@@ -817,6 +938,7 @@
     const metrics=session.type==='realise'?metricsForItems(actualItems,session.duration_min):{actual_cho_per_hour:null,actual_sodium_per_hour:null,actual_caffeine_per_hour:null};
     const payload={
       user_id:state.user.id,
+      plan_id:state.selectedPlanId,
       session_date:session.date,
       duration_minutes:session.duration_min,
       target_cho_per_hour:session.target_cho_h,
@@ -918,7 +1040,13 @@
 
   // ---------------- RENDER: NEXT BANNER ----------------
   function renderNextBanner(){
-    const el=document.getElementById('nextBanner'); const today=new Date(); today.setHours(0,0,0,0);
+    const el=document.getElementById('nextBanner');
+    if(!isSelectedPlanActive()){
+      const selected=state.plans.find(p=>p.id===state.selectedPlanId);
+      el.innerHTML='<div class="dot"></div><div>Plan archivé : <b>'+esc(selected?.name||selected?.race_name||'Cycle précédent')+'</b> — historique en consultation uniquement.</div>';
+      return;
+    }
+    const today=new Date(); today.setHours(0,0,0,0);
     const upcoming=state.sessions.filter(s=>s.type==='plan'&&s.date).map(s=>Object.assign({},s,{sd:new Date(s.date+'T00:00:00')})).filter(s=>s.sd>=today).sort((a,b)=>a.sd-b.sd);
     if(upcoming.length){ const s=upcoming[0],days=Math.round((s.sd-today)/86400000),dateFr=s.sd.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}),tgt=s.target_cho_h?' · cible <b>'+s.target_cho_h+' g/h</b>':''; el.innerHTML='<div class="dot"></div><div>Prochaine séance planifiée : '+(s.week?'<b>'+esc(s.week)+'</b> — ':'')+dateFr+' ('+(days===0?'aujourd\'hui':'dans '+days+' j')+')'+tgt+'</div>'; return; }
     if(state.settings.raceDate){ const d=new Date(state.settings.raceDate+'T00:00:00'),days=Math.round((d-today)/86400000); if(days>=0){el.innerHTML='<div class="dot"></div><div>Aucune séance planifiée à venir. Ta course est dans <b>'+days+' j</b>.</div>';return;} }
@@ -929,7 +1057,7 @@
   function renderProducts(){
     const products=allProducts(),byCat={}; products.forEach(p=>(byCat[p.cat]=byCat[p.cat]||[]).push(p)); let html='';
     CAT_ORDER.forEach(cat=>{ if(!byCat[cat]) return; html+='<div class="cat-title">'+esc(cat)+'</div>'; byCat[cat].forEach(p=>{html+=(state.editingId===p.id)?editRowHTML(p):normalRowHTML(p);}); });
-    document.getElementById('productList').innerHTML=html; bindProductListEvents();
+    document.getElementById('productList').innerHTML=html; bindProductListEvents(); applySessionEditability();
   }
   function normalRowHTML(p){
     const qty=state.quantities[p.id]||0;
@@ -993,6 +1121,7 @@
 
   // ---------------- SAVE SESSION ----------------
   document.getElementById('saveBtn').addEventListener('click',async()=>{
+    if(!state.activePlan||state.selectedPlanId!==state.activePlan.id){alert('Ce plan est archivé et consultable uniquement.');return;}
     const products=allProducts(),items=[]; products.forEach(p=>{const q=state.quantities[p.id]||0;if(q>0)items.push({id:p.id,name:p.name,qty:q,unit:p.unit,cho:p.cho,na:p.na,caf:p.caf,cat:p.cat});});
     if(items.length===0){alert('Ajoute au moins un produit avant d\'enregistrer.');return;}
     const dur=durationMinutes(),target=parseFloat(document.getElementById('targetInput').value)||null,dateStr=document.getElementById('sessDate').value,week=document.getElementById('sessWeek').value.trim(),notes=document.getElementById('sessNotes').value.trim(),isEdit=!!state.editingSessionId,isConverting=isEdit&&state.editingSessionOriginalType==='plan'&&state.type==='realise';
@@ -1036,6 +1165,7 @@
   function exitEditSessionMode(){state.editingSessionId=null;state.editingSessionOriginalType=null;document.getElementById('saveBtn').textContent='Enregistrer';document.getElementById('cancelEditBtn').style.display='none';document.getElementById('editingBanner').style.display='none';}
 
   async function enterEditSession(id){
+    if(!isSelectedPlanActive()){alert('Ce plan est archivé et consultable uniquement.');return;}
     const session=state.sessions.find(s=>s.id===id);if(!session)return;
     state.type=session.type||'plan';document.querySelectorAll('.seg-btn').forEach(b=>b.classList.toggle('active',b.getAttribute('data-type')===state.type));
     document.getElementById('sessWeek').value=session.week||'';document.getElementById('sessDate').value=session.date||'';const totalMin=session.duration_min||0;document.getElementById('durH').value=Math.floor(totalMin/60);document.getElementById('durM').value=Math.round(totalMin%60);document.getElementById('targetInput').value=session.target_cho_h!=null?session.target_cho_h:'';
@@ -1049,14 +1179,15 @@
   }
   function sessionRowHTML(s){
     const hours=(s.duration_min||0)/60,choH=hours>0?s.total_cho/hours:0,naH=hours>0?s.total_na/hours:0,pct=s.target_cho_h?(choH/s.target_cho_h*100):null;let barColor='var(--text-dimmer)';if(pct!=null){if(pct>=95&&pct<=115)barColor='var(--good)';else if((pct>=80&&pct<95)||(pct>115&&pct<=140))barColor='var(--warn)';else barColor='var(--bad)';}const barWidth=pct!=null?Math.max(3,Math.min(100,pct)):Math.min(100,choH/90*100),dateFr=s.date?new Date(s.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'}):'Sans date',itemsTxt=(s.items||[]).map(it=>fmt(it.qty,1)+'× '+esc(it.name)).join(' · '),durTxt=Math.floor(hours)+'h'+String(Math.round((s.duration_min||0)%60)).padStart(2,'0'),linkedRealise=s.type==='plan'?state.sessions.find(x=>x.linkedPlanId===s.id):null,linkedPlan=(s.type==='realise'&&s.linkedPlanId)?state.sessions.find(x=>x.id===s.linkedPlanId):null;
-    return '<div class="hist-row"><div class="hist-row-actions"><button class="hist-action" data-hedit="'+s.id+'">modifier</button><button class="hist-action hist-del" data-hid="'+s.id+'">supprimer</button></div><div class="hist-top"><div><div class="hist-date">'+(s.week?'<span class="week-chip">'+esc(s.week)+'</span>':'')+dateFr+' · '+durTxt+'</div></div><div class="hist-tag '+(s.type==='plan'?'plan':'realise')+'">'+(s.type==='plan'?'Prévision':'Réalisé')+'</div></div>'+(linkedRealise?'<div class="hist-linked">✓ convertie en séance réalisée</div>':'')+'<div class="hist-bar-track"><div class="hist-bar-fill" style="width:'+barWidth+'%;background:'+barColor+';"></div></div><div class="hist-figs"><span>CHO/h <b>'+fmt(choH,1)+'g</b></span><span>Na/h <b>'+fmt(naH,0)+'mg</b></span>'+(pct!=null?'<span>Cible <b>'+fmt(pct,0)+'%</b></span>':'')+'</div>'+(itemsTxt?'<div class="hist-items">'+itemsTxt+'</div>':'')+(s.notes?'<div class="hist-items" style="font-style:italic;">"'+esc(s.notes)+'"</div>':'')+(linkedPlan?comparisonHTML(linkedPlan,s):'')+(s.type==='realise'?'<div class="hist-copy-row"><button class="btn ghost small" data-hcopy="'+s.id+'">📋 Copier pour Strava</button></div>':'')+'</div>';
+    const canEdit=!!state.activePlan&&state.selectedPlanId===state.activePlan.id;
+    return '<div class="hist-row">'+(canEdit?'<div class="hist-row-actions"><button class="hist-action" data-hedit="'+s.id+'">modifier</button><button class="hist-action hist-del" data-hid="'+s.id+'">supprimer</button></div>':'')+'<div class="hist-top"><div><div class="hist-date">'+(s.week?'<span class="week-chip">'+esc(s.week)+'</span>':'')+dateFr+' · '+durTxt+'</div></div><div class="hist-tag '+(s.type==='plan'?'plan':'realise')+'">'+(s.type==='plan'?'Prévision':'Réalisé')+'</div></div>'+(linkedRealise?'<div class="hist-linked">✓ convertie en séance réalisée</div>':'')+'<div class="hist-bar-track"><div class="hist-bar-fill" style="width:'+barWidth+'%;background:'+barColor+';"></div></div><div class="hist-figs"><span>CHO/h <b>'+fmt(choH,1)+'g</b></span><span>Na/h <b>'+fmt(naH,0)+'mg</b></span>'+(pct!=null?'<span>Cible <b>'+fmt(pct,0)+'%</b></span>':'')+'</div>'+(itemsTxt?'<div class="hist-items">'+itemsTxt+'</div>':'')+(s.notes?'<div class="hist-items" style="font-style:italic;">"'+esc(s.notes)+'"</div>':'')+(linkedPlan?comparisonHTML(linkedPlan,s):'')+(s.type==='realise'?'<div class="hist-copy-row"><button class="btn ghost small" data-hcopy="'+s.id+'">📋 Copier pour Strava</button></div>':'')+'</div>';
   }
   function categoryEmoji(cat){if(cat==='Hydratation')return '💧';if(cat==='Électrolytes')return '🧂';if(cat==='Gels')return '🍯';if(cat==='Gommes')return '🍬';if(cat==='Barres')return '🍫';if(cat==='Compotes')return '🍎';return '🔹';}
   function itemEmoji(it){return categoryEmoji(it.cat);}
   function buildStravaSummary(s){const hours=(s.duration_min||0)/60,choH=hours>0?s.total_cho/hours:0,naH=hours>0?s.total_na/hours:0,pct=s.target_cho_h?choH/s.target_cho_h*100:null,durH=Math.floor((s.duration_min||0)/60),durM=Math.round((s.duration_min||0)%60),durTxt=durH>0?durH+'h'+String(durM).padStart(2,'0'):(s.duration_min||0)+' min',lines=[];lines.push('⚡ Nutrition'+(s.week?' — '+s.week:'')+' · '+durTxt);lines.push('🍞 '+fmt(s.total_cho,0)+'g glucides ('+fmt(choH,1)+'g/h'+(pct!=null?' · '+fmt(pct,0)+'% de la cible':'')+')');lines.push('🧂 '+fmt(s.total_na,0)+'mg sodium ('+fmt(naH,0)+'mg/h)');if(s.total_caf>0)lines.push('☕ '+fmt(s.total_caf,0)+'mg caféine');lines.push('');(s.items||[]).forEach(it=>lines.push(itemEmoji(it)+' '+fmt(it.qty,1)+'× '+it.name));return lines.join('\n');}
   async function copyToClipboard(text){if(navigator.clipboard&&navigator.clipboard.writeText&&window.isSecureContext){try{await navigator.clipboard.writeText(text);return true;}catch(e){}}try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.focus();ta.select();const ok=document.execCommand('copy');document.body.removeChild(ta);return ok;}catch(e){return false;}}
   function bindSessionRowEvents(){
-    document.querySelectorAll('[data-hid]').forEach(btn=>btn.addEventListener('click',async e=>{const id=e.currentTarget.getAttribute('data-hid');if(!confirm('Supprimer cette séance ?'))return;try{await deleteSessionDb(id);state.sessions=state.sessions.filter(s=>s.id!==id);if(state.editingSessionId===id)exitEditSessionMode();renderNextBanner();renderPlanList();renderHistList();}catch(err){alert('Impossible de supprimer cette séance : '+err.message);}}));
+    document.querySelectorAll('[data-hid]').forEach(btn=>btn.addEventListener('click',async e=>{if(!isSelectedPlanActive()){alert('Un plan archivé est consultable uniquement.');return;}const id=e.currentTarget.getAttribute('data-hid');if(!confirm('Supprimer cette séance ?'))return;try{await deleteSessionDb(id);state.sessions=state.sessions.filter(s=>s.id!==id);if(state.editingSessionId===id)exitEditSessionMode();renderNextBanner();renderPlanList();renderHistList();}catch(err){alert('Impossible de supprimer cette séance : '+err.message);}}));
     document.querySelectorAll('[data-hedit]').forEach(btn=>btn.addEventListener('click',e=>enterEditSession(e.currentTarget.getAttribute('data-hedit'))));
     document.querySelectorAll('[data-hcopy]').forEach(btn=>btn.addEventListener('click',async e=>{const target=e.currentTarget,id=target.getAttribute('data-hcopy'),s=state.sessions.find(x=>x.id===id);if(!s)return;const text=buildStravaSummary(s),original=target.textContent;const ok=await copyToClipboard(text);target.textContent=ok?'✓ Copié !':'⚠ Copie impossible';setTimeout(()=>{target.textContent=original;if(!ok)window.prompt('Copie automatique impossible — sélectionne et copie ce texte :',text);},1600);}));
   }
@@ -1159,6 +1290,10 @@
     a.href=url;a.download='suivi-ravito-export-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
   });
 
+  // ---------------- PLAN EVENTS ----------------
+  document.getElementById('planSelector').addEventListener('change',async e=>{try{await selectPlan(e.target.value);}catch(err){alert('Impossible de charger ce plan : '+err.message);}});
+  document.getElementById('newPlanBtn').addEventListener('click',createNextPlan);
+
   // ---------------- AUTH EVENTS ----------------
   document.getElementById('authLoginBtn').addEventListener('click',signIn);
   document.getElementById('authSignupBtn').addEventListener('click',signUp);
@@ -1180,5 +1315,5 @@
 })();
 </script>
 </body>
-<!-- Suivi Ravito v2.11 -->
+<!-- Suivi Ravito v2.13 -->
 </html>
